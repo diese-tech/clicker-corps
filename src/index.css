@@ -1,0 +1,464 @@
+/* ---- Reset & Base ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green-dark:  #1a2e1a;
+  --green-mid:   #2d4a1e;
+  --green-light: #4a7c28;
+  --green-neon:  #7cfc00;
+  --cream:       #e8dfc0;
+  --tan:         #c9b882;
+  --brown:       #6b4c1e;
+  --black:       #0d0d0d;
+  --red:         #c0392b;
+  --font-mono:   'Courier New', Courier, monospace;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--green-dark);
+  color: var(--cream);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+/* ---- App Layout ---- */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+/* ---- Header ---- */
+.header-stats {
+  background: var(--green-mid);
+  border: 2px solid var(--green-neon);
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.game-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--green-neon);
+  letter-spacing: 6px;
+  text-shadow: 0 0 10px var(--green-neon);
+}
+
+.tagline {
+  font-size: 11px;
+  color: var(--tan);
+  margin: 2px 0 10px;
+  letter-spacing: 2px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--tan);
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--cream);
+}
+
+.crayon-count {
+  color: var(--green-neon);
+  font-size: 24px;
+}
+
+.rank-value {
+  color: var(--tan);
+  font-size: 16px;
+}
+
+/* ---- Main Layout ---- */
+.main-layout {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  align-items: flex-start;
+}
+
+.left-col {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.right-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ---- Click Area ---- */
+.click-area {
+  background: var(--green-mid);
+  border: 2px solid var(--green-light);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.jarhead-btn {
+  background: none;
+  border: 3px solid var(--green-light);
+  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  cursor: pointer;
+  padding: 8px;
+  transition: border-color 0.1s, transform 0.08s, box-shadow 0.1s;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jarhead-btn:hover {
+  border-color: var(--green-neon);
+  box-shadow: 0 0 16px var(--green-neon);
+}
+
+.jarhead-btn:active {
+  transform: scale(0.93);
+  box-shadow: 0 0 28px var(--green-neon);
+}
+
+.jarhead-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.feed-btn {
+  background: var(--green-light);
+  color: var(--black);
+  border: none;
+  padding: 10px 28px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border: 2px solid var(--green-neon);
+  transition: background 0.1s, box-shadow 0.1s;
+  width: 100%;
+}
+
+.feed-btn:hover {
+  background: var(--green-neon);
+  box-shadow: 0 0 10px var(--green-neon);
+}
+
+.feed-btn:active {
+  transform: scale(0.97);
+}
+
+.click-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--tan);
+}
+
+/* ---- Panels ---- */
+.panel {
+  background: var(--green-mid);
+  border: 2px solid var(--green-light);
+  padding: 12px;
+}
+
+.panel-title {
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--tan);
+  border-bottom: 1px solid var(--green-light);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+/* ---- Generator Rows ---- */
+.generator-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74,124,40,0.3);
+  gap: 8px;
+}
+
+.generator-row:last-child { border-bottom: none; }
+
+.gen-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gen-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.gen-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gen-cps {
+  font-size: 10px;
+  color: var(--green-neon);
+}
+
+.gen-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.gen-owned {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--green-neon);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ---- Upgrade Rows ---- */
+.upgrade-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74,124,40,0.3);
+  gap: 8px;
+}
+
+.upgrade-row:last-child { border-bottom: none; }
+
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.upgrade-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.upgrade-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+/* ---- Buy Button ---- */
+.buy-btn {
+  background: var(--green-mid);
+  color: var(--green-neon);
+  border: 1px solid var(--green-light);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.buy-btn:hover:not(:disabled) {
+  background: var(--green-light);
+  color: var(--black);
+}
+
+.buy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cannot-afford .gen-name,
+.cannot-afford .upgrade-name {
+  opacity: 0.5;
+}
+
+/* ---- Mentor Panel ---- */
+.mentor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  gap: 8px;
+}
+
+.mentor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.mentor-name {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.mentor-row.unlocked .mentor-name { color: var(--green-neon); }
+.mentor-row.locked .mentor-name { color: var(--tan); letter-spacing: 2px; }
+
+.mentor-effect {
+  font-size: 12px;
+  color: var(--green-neon);
+}
+
+.mentor-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+.mentor-locked-hint {
+  font-size: 11px;
+  color: var(--tan);
+}
+
+.mentor-badge {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--green-neon);
+  flex-shrink: 0;
+}
+
+.mentor-progress-bar {
+  height: 6px;
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  width: 100%;
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.mentor-progress-fill {
+  height: 100%;
+  background: var(--green-neon);
+  transition: width 0.3s;
+}
+
+/* ---- Debug Panel ---- */
+.debug-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-top: 10px;
+  background: var(--black);
+  border: 1px solid var(--brown);
+  font-size: 11px;
+  color: var(--tan);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reset-btn {
+  background: none;
+  color: var(--red);
+  border: 1px solid var(--red);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.reset-btn:hover {
+  background: var(--red);
+  color: var(--cream);
+}
+
+/* ---- Offline Modal ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--green-mid);
+  border: 3px solid var(--green-neon);
+  padding: 32px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 0 40px var(--green-neon);
+}
+
+.modal-title {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--green-neon);
+  margin-bottom: 16px;
+}
+
+.modal-body {
+  font-size: 16px;
+  color: var(--cream);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .left-col {
+    width: 100%;
+  }
+}
