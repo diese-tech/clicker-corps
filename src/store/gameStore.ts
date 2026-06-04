@@ -22,6 +22,16 @@ import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
 import { dateKey, dailyAvailable, streakAfterClaim, dailyReward } from '../utils/daily'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
+// Clock-tamper detection: if the device clock is ever seen running more than
+// this far BEHIND the highest timestamp we've recorded, the player almost
+// certainly time-traveled forward (to bank bonuses) and set the clock back.
+// Generous tolerance avoids false positives from NTP corrections / DST.
+const CLOCK_TAMPER_TOLERANCE_MS = 10 * 60 * 1000
+
+const TIME_TAMPER_MESSAGE =
+  "Nice try, time traveler. The Crayon Inspector General noticed your device clock jump backward. " +
+  "Chrono-shenanigans earn you exactly zero bonus crayons and one (1) deeply disappointed Drill Instructor. Carry on, devil."
+
 // Transient, time-limited production buff granted by a collected event.
 export interface Buff {
   kind: 'cps' | 'click'
@@ -84,6 +94,8 @@ interface GameState {
   selectedTheme: string
   lastDailyClaimDay: string | null
   dailyStreak: number
+  clockHighWater: number
+  timeTamperMessage: string | null
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -107,6 +119,7 @@ interface GameState {
   toggleAutoBuyUpgrades: () => void
   toggleAutoCollectEvents: () => void
   setTheme: (id: string) => void
+  dismissTimeTamper: () => void
   spawnEvent: () => void
   collectEvent: () => void
   expireEvent: () => void
@@ -269,6 +282,7 @@ function fromSave(saved: SaveState) {
     selectedTheme: saved.selectedTheme ?? DEFAULT_THEME,
     lastDailyClaimDay: saved.lastDailyClaimDay ?? null,
     dailyStreak: saved.dailyStreak ?? 0,
+    clockHighWater: Math.max(saved.clockHighWater ?? 0, saved.lastSavedAt ?? 0),
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -310,6 +324,8 @@ function initialState() {
     selectedTheme: DEFAULT_THEME,
     lastDailyClaimDay: null as string | null,
     dailyStreak: 0,
+    clockHighWater: Date.now(),
+    timeTamperMessage: null as string | null,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -328,8 +344,18 @@ export const useGameStore = create<GameState>((set, get) => {
 
   if (saved) {
     const loaded = fromSave(saved)
+
+    // Clock-tamper check: the device clock reading earlier than the highest
+    // timestamp we've ever recorded means the player likely time-traveled and
+    // set the clock back. Offline gains from a negative elapsed are already
+    // nil; this just surfaces the Easter egg. Advance the high-water mark.
+    const now = Date.now()
+    const tampered = now < loaded.clockHighWater - CLOCK_TAMPER_TOLERANCE_MS
+    const clockHighWater = Math.max(loaded.clockHighWater, now)
+    const timeTamperMessage = tampered ? TIME_TAMPER_MESSAGE : null
+
     const offlineCap = computePrestigeEffects(loaded.prestigeUpgrades).offlineCapSeconds
-    const elapsed = Math.min((Date.now() - saved.lastSavedAt) / 1000, offlineCap)
+    const elapsed = Math.min((now - saved.lastSavedAt) / 1000, offlineCap)
     const offlineGain = loaded.cps * elapsed
 
     if (offlineGain > 0.5) {
@@ -348,14 +374,22 @@ export const useGameStore = create<GameState>((set, get) => {
         ...loaded,
         crayons: loaded.crayons + offlineGain,
         lifetimeCrayons: newLifetime,
-        lastSavedAt: Date.now(),
+        lastSavedAt: now,
         offlineMessage,
         unlockedAchievements,
         pendingAchievements: [],
+        clockHighWater,
+        timeTamperMessage,
         ...derived,
       }
     } else {
-      init = { ...loaded, pendingAchievements: [], offlineMessage: null }
+      init = {
+        ...loaded,
+        pendingAchievements: [],
+        offlineMessage: null,
+        clockHighWater,
+        timeTamperMessage,
+      }
     }
   }
 
@@ -384,6 +418,7 @@ export const useGameStore = create<GameState>((set, get) => {
         selectedTheme: s.selectedTheme,
         lastDailyClaimDay: s.lastDailyClaimDay,
         dailyStreak: s.dailyStreak,
+        clockHighWater: Math.max(s.clockHighWater, Date.now()),
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -517,6 +552,7 @@ export const useGameStore = create<GameState>((set, get) => {
           unlockedMentors: newMentors,
           activeBuffs: buffs,
           playtimeSeconds: s.playtimeSeconds + deltaSeconds,
+          clockHighWater: Math.max(s.clockHighWater, now),
         }
         const merged = {
           ...s,
@@ -634,6 +670,10 @@ export const useGameStore = create<GameState>((set, get) => {
 
     setTheme(id: string) {
       if (THEMES.some((t) => t.id === id)) set({ selectedTheme: id })
+    },
+
+    dismissTimeTamper() {
+      set({ timeTamperMessage: null })
     },
 
     spawnEvent() {

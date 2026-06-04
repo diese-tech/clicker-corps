@@ -18,6 +18,7 @@ import { MarineEvent } from './components/MarineEvent'
 import { BuffBar } from './components/BuffBar'
 import { DebugPanel } from './components/DebugPanel'
 import { OfflineModal } from './components/OfflineModal'
+import { TimeTravelModal } from './components/TimeTravelModal'
 import { EVENT_MAX_INTERVAL_MS, EVENT_MIN_INTERVAL_MS } from './data/events'
 import { computePrestigeEffects } from './data/prestigeUpgrades'
 
@@ -67,6 +68,7 @@ export default function App() {
   return (
     <div className="app">
       <OfflineModal />
+      <TimeTravelModal />
       <AchievementToast />
       <MarineEvent />
       <BuffBar />

@@ -19,6 +19,7 @@ export interface SaveState {
   selectedTheme: string
   lastDailyClaimDay: string | null
   dailyStreak: number
+  clockHighWater: number
   lastSavedAt: number
 }
 
