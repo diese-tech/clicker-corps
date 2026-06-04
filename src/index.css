@@ -14,6 +14,37 @@
   --font-mono:   'Courier New', Courier, monospace;
 }
 
+/* ---- Cosmetic Themes (reskin via CSS variable overrides) ---- */
+:root[data-theme='desert'] {
+  --green-dark:  #2b2416;
+  --green-mid:   #4a3f28;
+  --green-light: #8a7440;
+  --green-neon:  #e8c860;
+  --cream:       #f0e6cc;
+  --tan:         #c9b882;
+  --brown:       #5a4424;
+}
+
+:root[data-theme='dress_blues'] {
+  --green-dark:  #0a1226;
+  --green-mid:   #14264d;
+  --green-light: #2a4a8a;
+  --green-neon:  #d4af37;
+  --cream:       #f5f0e6;
+  --tan:         #aebbdd;
+  --brown:       #3a2a1e;
+}
+
+:root[data-theme='night_ops'] {
+  --green-dark:  #0a0a0a;
+  --green-mid:   #181818;
+  --green-light: #3a3a3a;
+  --green-neon:  #ffae00;
+  --cream:       #dcdcdc;
+  --tan:         #8a8a8a;
+  --brown:       #2a2418;
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -209,6 +240,60 @@ body {
   margin-bottom: 10px;
 }
 
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--green-light);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-title.no-margin {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.buy-amount-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.amount-btn {
+  background: var(--green-dark);
+  color: var(--tan);
+  border: 1px solid var(--green-light);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.amount-btn:hover {
+  color: var(--green-neon);
+}
+
+.amount-btn.active {
+  background: var(--green-light);
+  color: var(--black);
+  font-weight: bold;
+}
+
+.buy-count {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.buy-cost {
+  display: block;
+}
+
 /* ---- Generator Rows ---- */
 .generator-row {
   display: flex;
@@ -385,6 +470,79 @@ body {
   height: 100%;
   background: var(--green-neon);
   transition: width 0.3s;
+}
+
+/* ---- Manager Panel (NCO Corps) ---- */
+.autobuy-toggle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border: 1px solid var(--green-light);
+  background: var(--green-dark);
+}
+
+.autobuy-toggle.on {
+  color: var(--black);
+  background: var(--green-neon);
+  border-color: var(--green-neon);
+  font-weight: bold;
+}
+
+.autobuy-toggle.off {
+  color: var(--tan);
+}
+
+.manager-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74, 124, 40, 0.3);
+  gap: 8px;
+}
+
+.manager-row:last-child {
+  border-bottom: none;
+}
+
+.manager-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.manager-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.manager-row.hired .manager-name {
+  color: var(--green-neon);
+}
+
+.manager-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+.manager-runs {
+  font-size: 10px;
+  color: var(--green-neon);
+  opacity: 0.8;
+}
+
+.manager-hired-badge {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--green-neon);
+  flex-shrink: 0;
+  letter-spacing: 1px;
 }
 
 /* ---- Reenlistment (Prestige) Panel ---- */
@@ -604,6 +762,213 @@ body {
     left: 8px;
     max-width: none;
   }
+}
+
+/* ---- Marine Event (collectible) ---- */
+.marine-event {
+  position: fixed;
+  z-index: 150;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--green-mid);
+  border: 2px solid var(--green-neon);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 20px var(--green-neon);
+  animation: event-pulse 1s ease-in-out infinite;
+}
+
+.marine-event:hover {
+  box-shadow: 0 0 32px var(--green-neon);
+}
+
+@keyframes event-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+.marine-event-icon {
+  font-size: 28px;
+}
+
+.marine-event-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--green-neon);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* ---- Active Buff Bar ---- */
+.buff-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 140;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.buff-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-mid);
+  border: 1px solid var(--green-neon);
+  padding: 4px 10px;
+  box-shadow: 0 0 10px rgba(124, 252, 0, 0.4);
+}
+
+.buff-chip-label {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--green-neon);
+  letter-spacing: 1px;
+}
+
+.buff-chip-time {
+  font-size: 11px;
+  color: var(--cream);
+  font-weight: bold;
+}
+
+/* ---- Automation Panel ---- */
+.automation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74, 124, 40, 0.3);
+}
+
+.automation-row:last-child {
+  border-bottom: none;
+}
+
+.automation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.automation-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.automation-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+/* ---- Theme Switcher ---- */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.theme-swatch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: box-shadow 0.1s, transform 0.05s;
+}
+
+.theme-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.theme-swatch.active {
+  box-shadow: 0 0 10px currentColor;
+}
+
+.theme-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.theme-name {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* ---- Statistics ---- */
+.stats-trigger-panel {
+  padding: 8px;
+}
+
+.stats-trigger-btn {
+  width: 100%;
+  background: var(--green-dark);
+  color: var(--tan);
+  border: 1px solid var(--green-light);
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.stats-trigger-btn:hover {
+  color: var(--green-neon);
+  border-color: var(--green-neon);
+}
+
+.stats-modal {
+  text-align: left;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.stats-section {
+  margin-bottom: 16px;
+}
+
+.stats-section-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--green-neon);
+  border-bottom: 1px solid var(--green-light);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.stats-row-label {
+  color: var(--tan);
+}
+
+.stats-row-value {
+  color: var(--cream);
+  font-weight: bold;
 }
 
 /* ---- Debug Panel ---- */

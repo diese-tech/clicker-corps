@@ -1,5 +1,7 @@
 import { GENERATORS } from './generators'
 import { UPGRADES } from './upgrades'
+import { MANAGERS } from './managers'
+import { MENTORS } from './mentors'
 
 export interface AchievementContext {
   lifetimeCrayons: number
@@ -9,6 +11,7 @@ export interface AchievementContext {
   unlockedMentors: string[]
   cps: number
   commendations: number
+  hiredManagers: string[]
 }
 
 export interface AchievementDef {
@@ -98,6 +101,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.unlockedMentors.length >= 1,
   },
   {
+    id: 'living_history',
+    name: 'Living History',
+    flavor: 'Every legend mentors you now. The crayons practically eat themselves.',
+    hint: 'Unlock every mentor.',
+    check: (c) => c.unlockedMentors.length >= MENTORS.length,
+  },
+  {
     id: 'dangerously_motivated',
     name: 'Dangerously Motivated',
     flavor: 'Hit 100 crayons per second. Please go see your NCO.',
@@ -117,5 +127,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     flavor: 'Earned 10 Commendations. Your dress blues need a bigger chest.',
     hint: 'Accumulate 10 Commendations.',
     check: (c) => c.commendations >= 10,
+  },
+  {
+    id: 'put_in_charge',
+    name: 'Put In Charge',
+    flavor: 'Hired your first NCO. Delegation: the finest military tradition.',
+    hint: 'Hire any manager.',
+    check: (c) => c.hiredManagers.length >= 1,
+  },
+  {
+    id: 'whole_chain_of_command',
+    name: 'Whole Chain of Command',
+    flavor: 'Every generator has an NCO. You just supervise the supervisors now.',
+    hint: 'Hire every manager.',
+    check: (c) => c.hiredManagers.length >= MANAGERS.length,
   },
 ]
