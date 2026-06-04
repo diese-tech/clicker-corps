@@ -1,5 +1,4 @@
 import { GENERATORS } from './generators'
-import { UPGRADES } from './upgrades'
 import { MANAGERS } from './managers'
 import { MENTORS } from './mentors'
 import { PRESTIGE_UPGRADES } from './prestigeUpgrades'
@@ -100,9 +99,9 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'quartermaster',
     name: 'Quartermaster',
-    flavor: 'Bought every upgrade. You ARE the supply chain now.',
-    hint: 'Purchase every upgrade.',
-    check: (c) => c.purchasedUpgrades.length >= UPGRADES.length,
+    flavor: 'Stockpiled 25 upgrades in a single run. You ARE the supply chain now.',
+    hint: 'Hold 25 upgrades at once.',
+    check: (c) => c.purchasedUpgrades.length >= 25,
   },
   {
     id: 'standing_on_legends',

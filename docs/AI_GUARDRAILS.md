@@ -60,6 +60,17 @@ Historical Marine figures may inspire mechanics and flavor.
 
 Do not introduce real-person likeness systems, monetized hero collections, or legal-risk content without deliberate review.
 
+### Approved decision (project owner, 2026): mentors
+
+The mentor roster uses the **real names of deceased, historically significant Marines** as respectful homage. Rules:
+
+- **Deceased only.** Living service members are never represented — no real name, no likeness, no parody stand-in. Out of respect for their ongoing service and commitment, living recipients (e.g. recent Medal of Honor recipients) are simply left off the roster entirely.
+- **Respectful framing.** Mentor flavor text cites the Marine's real achievement as an honor. The crayon humor never targets the person, their service, or real casualties.
+- **Non-monetized.** Mentors are earned through play, never sold, and there is no likeness/gacha collection system.
+- Before adding any mentor, verify the individual is deceased.
+
+One sanctioned exception honors a *living* recipient **indirectly and respectfully**: the hidden `DDG-148` upgrade references the public hull number of the U.S. Navy destroyer **USS Kyle Carpenter**. No living person's name or likeness appears in shipped text — only the ship's official designation. This is an owner-approved, name-free homage, not a precedent for naming living service members.
+
 ## Art Direction
 
 Use placeholder assets whenever possible.

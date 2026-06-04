@@ -16,17 +16,17 @@ A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, r
 ### Features
 
 - **Clicking** — feed crayons by hand; click power scales with upgrades, prestige, and frenzies.
-- **10 generators** escalating from a Crayon Box to a worldwide Expeditionary Force, with exponential cost scaling.
+- **16 generators** escalating from a Crayon Box to a Galactic Crayon Reserve, with exponential cost scaling.
 - **Bulk buying** — purchase generators x1 / x10 / x100 / Max.
 - **Quantity milestones** — owning 25/50/100/150/200/300/400/500 of a generator doubles its output at each threshold (AdVenture-Capitalist style), with a badge and next-milestone hint.
-- **14 upgrades** — per-generator output doublers, global CPS tiers, click tiers, and cost reductions.
+- **80+ upgrades** — per-generator "Mark" tiers (×2 at 25/50/100/200 owned), global CPS doctrines, click tiers, and cost reductions, so there's always a next purchase. The Requisitions panel surfaces the cheapest unlocked ones first.
 - **Managers (NCO Corps)** — hire NCOs that auto-reinvest crayons into their generator, with a master Auto-Buy toggle.
 - **Crayon Factory Automation** — opt-in Auto-Requisition (buys affordable upgrades) and Auto-Collect Events.
 - **Random Marine Events** — golden-crayon drops granting instant windfalls or timed production / click frenzies, with a live buff bar.
-- **Prestige / "Reenlistment"** — every reset is a true crayon clean slate; you earn Commendations (each grants a passive production bonus) based on total lifetime crayons.
+- **Prestige / "Reenlistment"** — every reset is a true crayon clean slate that also wipes generators, run upgrades, and hired NCOs (only the Commendation Exchange and lifetime stats persist). Commendations are earned on a **logarithmic** curve — each one needs ~10× more lifetime crayons than the last — so prestige gets exponentially harder the deeper you go (first one lands several hours in).
 - **Commendation Exchange** — spend Commendations on ~10 permanent meta-upgrades (production/click multipliers, cheaper generators, longer offline cap, faster/bigger events, longer frenzies). Spending lowers your balance — and thus your passive bonus — so it's a real hoard-vs-invest decision (AdVenture-Capitalist-style).
-- **5 mentor legends** — parody-inspired Marine archetypes granting stacking permanent bonuses.
-- **15-tier rank ladder** — Recruit all the way to Supreme Allied Crayon Commander.
+- **10 mentor legends** — real, deceased legendary Marines (Daly, Butler, Basilone, Puller, Vandegrift, Boyington, Woody Williams, and more) as respectful homage, granting stacking permanent bonuses. (Living recipients are never named — see `docs/AI_GUARDRAILS.md`.)
+- **22-tier rank ladder** — Recruit all the way to Crayon Deity, First Class.
 - **26 achievements** ("Ribbon Rack") with pop-up unlock toasts. Each earned achievement also grants **+1% to all production** (a Cookie-Clicker-style morale/feedback loop).
 - **Daily morale bonus** — a once-per-day claimable reward that scales with production and a consecutive-day login streak (weekly frenzy every 7 days).
 - **Statistics** — a Service Record modal summarizing your whole career, including time in service.
