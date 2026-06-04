@@ -142,6 +142,21 @@ const STATIC_UPGRADES: UpgradeDef[] = [
     unlockCondition: (lifetime) => lifetime >= 10000000000,
     applyEffect: (s) => ({ ...s, globalCpsMultiplier: s.globalCpsMultiplier * 2 }),
   },
+  // Easter egg — honors a living Medal of Honor recipient indirectly via the
+  // hull number of his namesake U.S. Navy destroyer, USS Kyle Carpenter
+  // (DDG-148). Public ship nomenclature only: no name or likeness appears in
+  // shipped text (see docs/AI_GUARDRAILS.md). Hidden unlock at 148 total units
+  // owned — a nod to the hull number.
+  {
+    id: 'ddg_148',
+    name: 'DDG-148',
+    cost: 1480000000,
+    flavor:
+      "The Navy's newest destroyer, hull DDG-148 — named for a Marine who caught a grenade so his brother wouldn't. Fair winds and following seas.",
+    unlockCondition: (_lifetime, generators) =>
+      Object.values(generators).reduce((a, b) => a + b, 0) >= 148,
+    applyEffect: (s) => ({ ...s, globalCpsMultiplier: s.globalCpsMultiplier * 2 }),
+  },
 ]
 
 // Per-generator "Mark" upgrades: each doubles that generator's output once you

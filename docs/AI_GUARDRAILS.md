@@ -69,6 +69,8 @@ The mentor roster uses the **real names of deceased, historically significant Ma
 - **Non-monetized.** Mentors are earned through play, never sold, and there is no likeness/gacha collection system.
 - Before adding any mentor, verify the individual is deceased.
 
+One sanctioned exception honors a *living* recipient **indirectly and respectfully**: the hidden `DDG-148` upgrade references the public hull number of the U.S. Navy destroyer **USS Kyle Carpenter**. No living person's name or likeness appears in shipped text — only the ship's official designation. This is an owner-approved, name-free homage, not a precedent for naming living service members.
+
 ## Art Direction
 
 Use placeholder assets whenever possible.
