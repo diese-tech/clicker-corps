@@ -1,15 +1,19 @@
 import { useGameStore } from '../store/gameStore'
-import { ACHIEVEMENTS } from '../data/achievements'
+import { ACHIEVEMENTS, MORALE_BONUS_PER_ACHIEVEMENT } from '../data/achievements'
 
 export function AchievementPanel() {
   const unlockedAchievements = useGameStore((s) => s.unlockedAchievements)
   const unlockedCount = unlockedAchievements.length
+  const moralePct = Math.round(unlockedCount * MORALE_BONUS_PER_ACHIEVEMENT * 100)
 
   return (
     <section className="panel">
       <h2 className="panel-title">
         RIBBON RACK <span className="ach-count">{unlockedCount}/{ACHIEVEMENTS.length}</span>
       </h2>
+      {unlockedCount > 0 && (
+        <p className="ach-morale">Morale bonus: +{moralePct}% to all production</p>
+      )}
       <div className="ach-grid">
         {ACHIEVEMENTS.map((a) => {
           const unlocked = unlockedAchievements.includes(a.id)

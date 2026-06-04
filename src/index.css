@@ -735,6 +735,12 @@ body {
   letter-spacing: 1px;
 }
 
+.ach-morale {
+  font-size: 11px;
+  color: var(--green-neon);
+  margin-bottom: 8px;
+}
+
 .ach-grid {
   display: flex;
   flex-direction: column;

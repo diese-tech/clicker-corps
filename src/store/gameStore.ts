@@ -4,7 +4,7 @@ import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
 import { milestoneMultiplier } from '../data/milestones'
-import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
+import { ACHIEVEMENTS, AchievementContext, moraleMultiplier } from '../data/achievements'
 import { prestigePotential } from '../data/prestige'
 import { computePrestigeEffects, PRESTIGE_UPGRADES } from '../data/prestigeUpgrades'
 import { DEFAULT_THEME, THEMES } from '../data/themes'
@@ -216,6 +216,7 @@ function buildDerived(
     | 'lifetimeCrayons'
     | 'commendations'
     | 'prestigeUpgrades'
+    | 'unlockedAchievements'
   >,
   buffs: BuffMultipliers = NO_BUFFS
 ) {
@@ -224,9 +225,16 @@ function buildDerived(
   // Passive Commendation bonus (rate set by prestige upgrades) times any
   // permanent prestige production multipliers.
   const prestige = 1 + state.commendations * pe.bonusPerCommendation
+  // Morale: each earned achievement nudges all production up.
+  const morale = moraleMultiplier(state.unlockedAchievements.length)
   return {
-    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige * pe.cpsMult * buffs.cps,
-    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * buffs.click,
+    cps:
+      computeCps(state.generators, effects, state.unlockedMentors) *
+      prestige *
+      pe.cpsMult *
+      morale *
+      buffs.cps,
+    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * morale * buffs.click,
     rank: getRank(state.lifetimeCrayons),
   }
 }
