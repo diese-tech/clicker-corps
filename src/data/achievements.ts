@@ -1,6 +1,7 @@
 import { GENERATORS } from './generators'
 import { UPGRADES } from './upgrades'
 import { MANAGERS } from './managers'
+import { MENTORS } from './mentors'
 
 export interface AchievementContext {
   lifetimeCrayons: number
@@ -98,6 +99,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     flavor: 'Unlocked a mentor. Somewhere, a chest is being puffed out.',
     hint: 'Unlock any mentor.',
     check: (c) => c.unlockedMentors.length >= 1,
+  },
+  {
+    id: 'living_history',
+    name: 'Living History',
+    flavor: 'Every legend mentors you now. The crayons practically eat themselves.',
+    hint: 'Unlock every mentor.',
+    check: (c) => c.unlockedMentors.length >= MENTORS.length,
   },
   {
     id: 'dangerously_motivated',

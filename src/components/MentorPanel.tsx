@@ -5,10 +5,17 @@ import { formatNumber } from '../utils/math'
 export function MentorPanel() {
   const { lifetimeCrayons, unlockedMentors } = useGameStore()
 
+  // Reveal a mentor once unlocked or within reach (10% of the threshold) so
+  // the roster builds anticipation without spoiling every legend up front.
+  const visible = MENTORS.filter(
+    (m) => unlockedMentors.includes(m.id) || lifetimeCrayons >= m.unlockAt * 0.1
+  )
+  if (visible.length === 0) return null
+
   return (
     <section className="panel">
       <h2 className="panel-title">MENTOR PROGRAM</h2>
-      {MENTORS.map((m) => {
+      {visible.map((m) => {
         const unlocked = unlockedMentors.includes(m.id)
         const progress = Math.min((lifetimeCrayons / m.unlockAt) * 100, 100)
 
