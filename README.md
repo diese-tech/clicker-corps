@@ -18,6 +18,7 @@ A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, r
 - **Clicking** — feed crayons by hand; click power scales with upgrades, prestige, and frenzies.
 - **10 generators** escalating from a Crayon Box to a worldwide Expeditionary Force, with exponential cost scaling.
 - **Bulk buying** — purchase generators x1 / x10 / x100 / Max.
+- **Quantity milestones** — owning 25/50/100/150/200/300/400/500 of a generator doubles its output at each threshold (AdVenture-Capitalist style), with a badge and next-milestone hint.
 - **14 upgrades** — per-generator output doublers, global CPS tiers, click tiers, and cost reductions.
 - **Managers (NCO Corps)** — hire NCOs that auto-reinvest crayons into their generator, with a master Auto-Buy toggle.
 - **Crayon Factory Automation** — opt-in Auto-Requisition (buys affordable upgrades) and Auto-Collect Events.
@@ -26,10 +27,12 @@ A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, r
 - **Commendation Exchange** — spend Commendations on ~10 permanent meta-upgrades (production/click multipliers, cheaper generators, longer offline cap, faster/bigger events, longer frenzies). Spending lowers your balance — and thus your passive bonus — so it's a real hoard-vs-invest decision (AdVenture-Capitalist-style).
 - **5 mentor legends** — parody-inspired Marine archetypes granting stacking permanent bonuses.
 - **15-tier rank ladder** — Recruit all the way to Supreme Allied Crayon Commander.
-- **24 achievements** ("Ribbon Rack") with pop-up unlock toasts.
+- **26 achievements** ("Ribbon Rack") with pop-up unlock toasts. Each earned achievement also grants **+1% to all production** (a Cookie-Clicker-style morale/feedback loop).
+- **Daily morale bonus** — a once-per-day claimable reward that scales with production and a consecutive-day login streak (weekly frenzy every 7 days).
 - **Statistics** — a Service Record modal summarizing your whole career, including time in service.
 - **Cosmetic themes** — Woodland, Desert, Dress Blues, and Night Ops palettes.
-- **Persistence** — localStorage autosave every 5s, offline progress capped at 8 hours, and a reset-save button.
+- **Persistence** — localStorage autosave every 5s, offline progress capped at 8 hours (extendable via prestige), and a reset-save button.
+- **Time-travel detection** — a local clock-tamper check (no backend) that greets clock-cheaters with a tongue-in-cheek "Temporal Violation" Easter egg.
 
 ### Out of scope (by design)
 
