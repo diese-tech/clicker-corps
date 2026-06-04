@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { GENERATORS } from '../data/generators'
 import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
+import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { getRank } from '../data/ranks'
 import { generatorCost } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
@@ -15,6 +16,8 @@ interface GameState {
   generators: Record<string, number>
   purchasedUpgrades: string[]
   unlockedMentors: string[]
+  unlockedAchievements: string[]
+  pendingAchievements: string[]
   lastSavedAt: number
   offlineMessage: string | null
 
@@ -29,7 +32,63 @@ interface GameState {
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
   dismissOfflineMessage: () => void
+  dismissAchievementToast: () => void
   resetSave: () => void
+}
+
+interface AchievementResult {
+  unlockedAchievements: string[]
+  pendingAchievements: string[]
+}
+
+// Evaluates achievement predicates against the latest state. Newly unlocked
+// ids are appended to both the persistent unlocked list and the transient
+// toast queue. When `announce` is false (e.g. on load), unlocks are recorded
+// silently without queueing a toast — this avoids spamming notifications for
+// progress made in a previous session.
+function evalAchievements(
+  ctx: AchievementContext,
+  unlocked: string[],
+  pending: string[],
+  announce = true
+): AchievementResult {
+  let newlyUnlocked: string[] | null = null
+  for (const a of ACHIEVEMENTS) {
+    if (!unlocked.includes(a.id) && a.check(ctx)) {
+      ;(newlyUnlocked ??= []).push(a.id)
+    }
+  }
+  if (!newlyUnlocked) return { unlockedAchievements: unlocked, pendingAchievements: pending }
+  return {
+    unlockedAchievements: [...unlocked, ...newlyUnlocked],
+    pendingAchievements: announce ? [...pending, ...newlyUnlocked] : pending,
+  }
+}
+
+// Convenience wrapper: derives the achievement context from a fully-merged
+// state object and evaluates against its current unlocked/pending lists.
+function checkAchievements(
+  merged: Pick<
+    GameState,
+    | 'lifetimeCrayons'
+    | 'totalClicks'
+    | 'generators'
+    | 'purchasedUpgrades'
+    | 'unlockedMentors'
+    | 'cps'
+    | 'unlockedAchievements'
+    | 'pendingAchievements'
+  >
+): AchievementResult {
+  const ctx: AchievementContext = {
+    lifetimeCrayons: merged.lifetimeCrayons,
+    totalClicks: merged.totalClicks,
+    generators: merged.generators,
+    purchasedUpgrades: merged.purchasedUpgrades,
+    unlockedMentors: merged.unlockedMentors,
+    cps: merged.cps,
+  }
+  return evalAchievements(ctx, merged.unlockedAchievements, merged.pendingAchievements)
 }
 
 function computeEffects(purchased: string[]): UpgradeEffectState {
@@ -86,9 +145,19 @@ function fromSave(saved: SaveState) {
     generators: saved.generators,
     purchasedUpgrades: saved.purchasedUpgrades,
     unlockedMentors: saved.unlockedMentors,
+    unlockedAchievements: saved.unlockedAchievements ?? [],
     lastSavedAt: saved.lastSavedAt,
   }
-  return { ...base, ...buildDerived(base) }
+  const derived = buildDerived(base)
+  // Silently reconcile achievements already earned (covers saves written
+  // before achievements existed). No toast queue on load.
+  const { unlockedAchievements } = evalAchievements(
+    { ...base, cps: derived.cps },
+    base.unlockedAchievements,
+    [],
+    false
+  )
+  return { ...base, ...derived, unlockedAchievements }
 }
 
 function initialState() {
@@ -99,6 +168,8 @@ function initialState() {
     generators: {} as Record<string, number>,
     purchasedUpgrades: [] as string[],
     unlockedMentors: [] as string[],
+    unlockedAchievements: [] as string[],
+    pendingAchievements: [] as string[],
     lastSavedAt: Date.now(),
     cps: 0,
     crayonsPerClick: 1,
@@ -121,19 +192,27 @@ export const useGameStore = create<GameState>((set, get) => {
     if (offlineGain > 0.5) {
       const gained = Math.floor(offlineGain)
       offlineMessage = `While you were gone, the Corps consumed ${gained.toLocaleString()} crayons.`
+      const newLifetime = loaded.lifetimeCrayons + offlineGain
+      const derived = buildDerived({ ...loaded, lifetimeCrayons: newLifetime })
+      // Offline gains can cross achievement thresholds — record them silently.
+      const { unlockedAchievements } = evalAchievements(
+        { ...loaded, lifetimeCrayons: newLifetime, cps: derived.cps },
+        loaded.unlockedAchievements,
+        [],
+        false
+      )
       init = {
         ...loaded,
         crayons: loaded.crayons + offlineGain,
-        lifetimeCrayons: loaded.lifetimeCrayons + offlineGain,
+        lifetimeCrayons: newLifetime,
         lastSavedAt: Date.now(),
         offlineMessage,
-        ...buildDerived({
-          ...loaded,
-          lifetimeCrayons: loaded.lifetimeCrayons + offlineGain,
-        }),
+        unlockedAchievements,
+        pendingAchievements: [],
+        ...derived,
       }
     } else {
-      init = { ...loaded, offlineMessage: null }
+      init = { ...loaded, pendingAchievements: [], offlineMessage: null }
     }
   }
 
@@ -150,6 +229,7 @@ export const useGameStore = create<GameState>((set, get) => {
         generators: s.generators,
         purchasedUpgrades: s.purchasedUpgrades,
         unlockedMentors: s.unlockedMentors,
+        unlockedAchievements: s.unlockedAchievements,
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -179,7 +259,8 @@ export const useGameStore = create<GameState>((set, get) => {
           totalClicks: newClicks,
           unlockedMentors: newMentors,
         }
-        return { ...next, ...buildDerived({ ...s, ...next }) }
+        const merged = { ...s, ...next, ...buildDerived({ ...s, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
       })
     },
 
@@ -195,7 +276,8 @@ export const useGameStore = create<GameState>((set, get) => {
       set((state) => {
         const newGenerators = { ...state.generators, [id]: (state.generators[id] ?? 0) + 1 }
         const next = { crayons: state.crayons - cost, generators: newGenerators }
-        return { ...next, ...buildDerived({ ...state, ...next }) }
+        const merged = { ...state, ...next, ...buildDerived({ ...state, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
       })
     },
 
@@ -208,7 +290,8 @@ export const useGameStore = create<GameState>((set, get) => {
       set((state) => {
         const newPurchased = [...state.purchasedUpgrades, id]
         const next = { crayons: state.crayons - def.cost, purchasedUpgrades: newPurchased }
-        return { ...next, ...buildDerived({ ...state, ...next }) }
+        const merged = { ...state, ...next, ...buildDerived({ ...state, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
       })
     },
 
@@ -231,12 +314,17 @@ export const useGameStore = create<GameState>((set, get) => {
           lifetimeCrayons: newLifetime,
           unlockedMentors: newMentors,
         }
-        return { ...next, ...buildDerived({ ...s, ...next }) }
+        const merged = { ...s, ...next, ...buildDerived({ ...s, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
       })
     },
 
     dismissOfflineMessage() {
       set({ offlineMessage: null })
+    },
+
+    dismissAchievementToast() {
+      set((s) => ({ pendingAchievements: s.pendingAchievements.slice(1) }))
     },
 
     resetSave() {

@@ -26,6 +26,7 @@ The core loop is implemented and runs in the browser. This is a rough prototype 
 - Offline progress calculated on load, capped at 8 hours
 - Reset-save debug button
 - Offline return message ("While you were gone, the Corps consumed X crayons.")
+- 12 achievements ("Ribbon Rack") tracked across clicks, lifetime crayons, generators, upgrades, and mentors, with a pop-up toast on unlock
 
 ### What's NOT in V0 (by design)
 
@@ -71,6 +72,7 @@ src/
     upgrades.ts         Upgrade definitions and effects
     ranks.ts            Rank thresholds and lookup
     mentors.ts          Mentor unlock definitions
+    achievements.ts     Achievement definitions and unlock predicates
   store/
     gameStore.ts        Zustand store — all game state and actions
     effectsHelper.ts    Upgrade effect computation helper
@@ -83,6 +85,8 @@ src/
     GeneratorList.tsx   Buy generators panel
     UpgradeList.tsx     Available upgrades panel
     MentorPanel.tsx     Mentor unlock + progress bar
+    AchievementPanel.tsx  Ribbon rack — locked/unlocked achievements
+    AchievementToast.tsx  Pop-up notification on achievement unlock
     DebugPanel.tsx      Lifetime stats + reset button
     OfflineModal.tsx    Offline progress notification
 public/
