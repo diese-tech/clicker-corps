@@ -57,138 +57,297 @@ body {
   min-height: 100vh;
 }
 
-/* ---- App Layout ---- */
+/* ---- App Layout: single screen, only the tab content scrolls ---- */
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  max-width: 1100px;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 560px;
   margin: 0 auto;
-  padding: 8px;
+  padding: 8px 8px 0;
+  overflow: hidden;
 }
 
-/* ---- Header ---- */
-.header-stats {
+/* ---- Sticky Top Currency Bar ---- */
+.topbar {
+  flex-shrink: 0;
   background: var(--green-mid);
   border: 2px solid var(--green-neon);
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.game-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--green-neon);
-  letter-spacing: 6px;
-  text-shadow: 0 0 10px var(--green-neon);
-}
-
-.tagline {
-  font-size: 11px;
-  color: var(--tan);
-  margin: 2px 0 10px;
-  letter-spacing: 2px;
-}
-
-.stats-row {
+  padding: 6px 12px;
+  margin-bottom: 8px;
   display: flex;
-  justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
-.stat-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.stat-label {
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: var(--tan);
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--cream);
-}
-
-.crayon-count {
-  color: var(--green-neon);
-  font-size: 24px;
-}
-
-.rank-value {
-  color: var(--tan);
-  font-size: 16px;
-}
-
-/* ---- Main Layout ---- */
-.main-layout {
-  display: flex;
-  gap: 10px;
-  flex: 1;
-  align-items: flex-start;
-}
-
-.left-col {
-  width: 260px;
-  flex-shrink: 0;
-}
-
-.right-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
-
-/* ---- Click Area ---- */
-.click-area {
-  background: var(--green-mid);
-  border: 2px solid var(--green-light);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
-.jarhead-btn {
-  background: none;
-  border: 3px solid var(--green-light);
-  border-radius: 50%;
-  width: 180px;
-  height: 180px;
+.topbar-brand {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--green-neon);
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px var(--green-neon);
+  flex-shrink: 0;
+}
+
+.currency-row {
+  display: flex;
+  align-items: center;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.currency {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.currency-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cream);
+}
+
+.currency.hero .currency-value {
+  font-size: 22px;
+  color: var(--green-neon);
+}
+
+.currency-value.rank {
+  font-size: 13px;
+  color: var(--tan);
+}
+
+.currency-label {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--tan);
+}
+
+/* ---- Daily Morale Bonus ---- */
+.daily-bonus {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border: 2px solid var(--green-light);
+  background: var(--green-mid);
+}
+
+.daily-bonus.available {
+  border-color: var(--green-neon);
+  box-shadow: 0 0 16px rgba(124, 252, 0, 0.4);
+  animation: daily-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes daily-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(124, 252, 0, 0.3); }
+  50% { box-shadow: 0 0 22px rgba(124, 252, 0, 0.6); }
+}
+
+.daily-bonus.claimed {
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 16px;
+  opacity: 0.85;
+}
+
+.daily-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.daily-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--green-neon);
+  font-weight: bold;
+}
+
+.daily-sub {
+  font-size: 13px;
+  color: var(--cream);
+}
+
+.daily-streak {
+  font-size: 12px;
+  color: var(--tan);
+}
+
+.daily-claim-btn {
+  background: var(--green-light);
+  color: var(--black);
+  border: 2px solid var(--green-neon);
+  padding: 8px 24px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
   cursor: pointer;
-  padding: 8px;
-  transition: border-color 0.1s, transform 0.08s, box-shadow 0.1s;
-  overflow: hidden;
+  transition: background 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
+}
+
+.daily-claim-btn:hover {
+  background: var(--green-neon);
+  box-shadow: 0 0 12px var(--green-neon);
+}
+
+.daily-claim-btn:active {
+  transform: scale(0.97);
+}
+
+/* ---- Tab Bar ---- */
+.tab-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  flex: 1 1 0;
+  min-width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: var(--green-mid);
+  border: 1px solid var(--green-light);
+  color: var(--tan);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.tab-btn:hover {
+  color: var(--green-neon);
+}
+
+.tab-btn.active {
+  border-color: var(--green-neon);
+  color: var(--green-neon);
+  box-shadow: inset 0 -2px 0 var(--green-neon);
+}
+
+.tab-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ---- Tab Content (the only scrolling region) ---- */
+.tab-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* leave room for the floating feed dock */
+  padding-bottom: 150px;
+}
+
+.tab-intro {
+  font-size: 11px;
+  color: var(--tan);
+  font-style: italic;
+  margin: 2px 2px -2px;
+}
+
+/* ---- Feed Dock (Egg-Inc-style bottom control) ---- */
+.feed-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.feed-rate {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--green-neon);
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  border-radius: 10px;
+  padding: 2px 10px;
+  text-shadow: 0 0 6px var(--green-neon);
+}
+
+.feed-circle {
+  pointer-events: auto;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 3px solid var(--green-neon);
+  background: var(--green-mid);
+  cursor: pointer;
+  padding: 6px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 18px rgba(124, 252, 0, 0.45);
+  transition: transform 0.06s, box-shadow 0.1s;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.jarhead-btn:hover {
-  border-color: var(--green-neon);
-  box-shadow: 0 0 16px var(--green-neon);
+.feed-circle:active {
+  transform: scale(0.92);
+  box-shadow: 0 0 32px var(--green-neon);
 }
 
-.jarhead-btn:active {
-  transform: scale(0.93);
-  box-shadow: 0 0 28px var(--green-neon);
-}
-
-.jarhead-img {
+.feed-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.feed-circle-label {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--green-neon);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 1px 8px;
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 .feed-btn {
@@ -332,6 +491,23 @@ body {
 .gen-cps {
   font-size: 10px;
   color: var(--green-neon);
+}
+
+.gen-milestone-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--black);
+  background: var(--green-neon);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.gen-milestone-hint {
+  font-size: 9px;
+  color: var(--tan);
 }
 
 .gen-right {
@@ -718,6 +894,12 @@ body {
   letter-spacing: 1px;
 }
 
+.ach-morale {
+  font-size: 11px;
+  color: var(--green-neon);
+  margin-bottom: 8px;
+}
+
 .ach-grid {
   display: flex;
   flex-direction: column;
@@ -876,13 +1058,11 @@ body {
 
 /* ---- Active Buff Bar ---- */
 .buff-bar {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: 140;
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 6px;
+  margin-bottom: 8px;
 }
 
 .buff-chip {
@@ -1108,11 +1288,44 @@ body {
 }
 
 /* ---- Responsive ---- */
-@media (max-width: 640px) {
-  .main-layout {
-    flex-direction: column;
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
   }
-  .left-col {
-    width: 100%;
+  .topbar {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 6px 10px;
+  }
+  .topbar-brand {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .currency.hero .currency-value {
+    font-size: 19px;
+  }
+  .currency-value {
+    font-size: 14px;
+  }
+  .tab-label {
+    font-size: 8px;
+  }
+  .feed-circle {
+    width: 88px;
+    height: 88px;
+  }
+  .tab-content {
+    padding-bottom: 130px;
+  }
+}
+
+/* Short viewports: trim the feed control so content keeps its space. */
+@media (max-height: 620px) {
+  .feed-circle {
+    width: 80px;
+    height: 80px;
+  }
+  .tab-content {
+    padding-bottom: 120px;
   }
 }

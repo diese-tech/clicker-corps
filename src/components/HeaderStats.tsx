@@ -8,28 +8,27 @@ export function HeaderStats() {
   const prestigeBonusPct = Math.round(commendations * bonusPer * 100)
 
   return (
-    <header className="header-stats">
-      <div className="game-title">CLICKER CORPS</div>
-      <div className="tagline">From Private to Legend. One crayon at a time.</div>
-      <div className="stats-row">
-        <div className="stat-block">
-          <span className="stat-label">RANK</span>
-          <span className="stat-value rank-value">{rank}</span>
+    <header className="topbar">
+      <div className="topbar-brand">CLICKER&nbsp;CORPS</div>
+      <div className="currency-row">
+        <div className="currency hero">
+          <span className="currency-value">{formatNumber(crayons)}</span>
+          <span className="currency-label">🖍 CRAYONS</span>
         </div>
-        <div className="stat-block">
-          <span className="stat-label">CRAYONS</span>
-          <span className="stat-value crayon-count">{formatNumber(crayons)}</span>
+        <div className="currency">
+          <span className="currency-value">{formatNumber(cps)}/s</span>
+          <span className="currency-label">PER SEC</span>
         </div>
-        <div className="stat-block">
-          <span className="stat-label">PER SEC</span>
-          <span className="stat-value">{cps.toFixed(1)}/s</span>
+        <div className="currency">
+          <span className="currency-value rank">{rank}</span>
+          <span className="currency-label">RANK</span>
         </div>
         {commendations > 0 && (
-          <div className="stat-block">
-            <span className="stat-label">COMMENDATIONS</span>
-            <span className="stat-value rank-value">
+          <div className="currency">
+            <span className="currency-value">
               {commendations} <span className="commendation-bonus">+{prestigeBonusPct}%</span>
             </span>
+            <span className="currency-label">🎖 COMMEND</span>
           </div>
         )}
       </div>

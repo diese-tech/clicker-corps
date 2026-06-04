@@ -7,6 +7,7 @@ import {
   formatNumber,
 } from '../utils/math'
 import { totalCostMultiplier } from '../store/effectsHelper'
+import { milestoneMultiplier, nextMilestone } from '../data/milestones'
 
 type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
@@ -56,15 +57,25 @@ export function GeneratorList() {
         }
 
         const affordable = count > 0 && crayons >= cost
-        const contribution = owned * g.baseCps
+        const milestoneMult = milestoneMultiplier(owned)
+        const contribution = owned * g.baseCps * milestoneMult
+        const next = nextMilestone(owned)
         const label = buyAmount === 'max' ? `MAX${count > 0 ? ` (${count})` : ''}` : `x${count}`
 
         return (
           <div key={g.id} className={`generator-row ${!affordable ? 'cannot-afford' : ''}`}>
             <div className="gen-info">
-              <span className="gen-name">{g.name}</span>
+              <span className="gen-name">
+                {g.name}
+                {milestoneMult > 1 && <span className="gen-milestone-badge">×{milestoneMult}</span>}
+              </span>
               <span className="gen-flavor">{g.flavor}</span>
               <span className="gen-cps">{formatNumber(contribution)} crayons/sec</span>
+              {next !== null && owned > 0 && (
+                <span className="gen-milestone-hint">
+                  ×2 at {next} ({next - owned} to go)
+                </span>
+              )}
             </div>
             <div className="gen-right">
               <span className="gen-owned">{owned}</span>

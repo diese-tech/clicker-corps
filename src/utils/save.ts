@@ -17,6 +17,9 @@ export interface SaveState {
   autoCollectEvents: boolean
   playtimeSeconds: number
   selectedTheme: string
+  lastDailyClaimDay: string | null
+  dailyStreak: number
+  clockHighWater: number
   lastSavedAt: number
 }
 

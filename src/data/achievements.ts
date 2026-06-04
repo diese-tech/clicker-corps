@@ -4,6 +4,15 @@ import { MANAGERS } from './managers'
 import { MENTORS } from './mentors'
 import { PRESTIGE_UPGRADES } from './prestigeUpgrades'
 
+// Each unlocked achievement grants this much extra global production —
+// Clicker Corps' take on Cookie Clicker's milk/kitten feedback loop. Earning
+// ribbons quietly makes the whole Corps more motivated.
+export const MORALE_BONUS_PER_ACHIEVEMENT = 0.01
+
+export function moraleMultiplier(unlockedCount: number): number {
+  return 1 + unlockedCount * MORALE_BONUS_PER_ACHIEVEMENT
+}
+
 export interface AchievementContext {
   lifetimeCrayons: number
   totalClicks: number

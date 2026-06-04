@@ -3,7 +3,8 @@ import { GENERATORS } from '../data/generators'
 import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
-import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
+import { milestoneMultiplier } from '../data/milestones'
+import { ACHIEVEMENTS, AchievementContext, moraleMultiplier } from '../data/achievements'
 import { prestigePotential } from '../data/prestige'
 import { computePrestigeEffects, PRESTIGE_UPGRADES } from '../data/prestigeUpgrades'
 import { DEFAULT_THEME, THEMES } from '../data/themes'
@@ -18,7 +19,18 @@ import {
   pickWeightedEvent,
 } from '../data/events'
 import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
+import { dateKey, dailyAvailable, streakAfterClaim, dailyReward } from '../utils/daily'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
+
+// Clock-tamper detection: if the device clock is ever seen running more than
+// this far BEHIND the highest timestamp we've recorded, the player almost
+// certainly time-traveled forward (to bank bonuses) and set the clock back.
+// Generous tolerance avoids false positives from NTP corrections / DST.
+const CLOCK_TAMPER_TOLERANCE_MS = 10 * 60 * 1000
+
+const TIME_TAMPER_MESSAGE =
+  "Nice try, time traveler. The Crayon Inspector General noticed your device clock jump backward. " +
+  "Chrono-shenanigans earn you exactly zero bonus crayons and one (1) deeply disappointed Drill Instructor. Carry on, devil."
 
 // Transient, time-limited production buff granted by a collected event.
 export interface Buff {
@@ -80,6 +92,10 @@ interface GameState {
   autoCollectEvents: boolean
   playtimeSeconds: number
   selectedTheme: string
+  lastDailyClaimDay: string | null
+  dailyStreak: number
+  clockHighWater: number
+  timeTamperMessage: string | null
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -97,11 +113,13 @@ interface GameState {
   tick: (deltaSeconds: number) => void
   reenlist: () => void
   buyPrestigeUpgrade: (id: string) => void
+  claimDaily: () => void
   hireManager: (id: string) => void
   toggleAutoBuy: () => void
   toggleAutoBuyUpgrades: () => void
   toggleAutoCollectEvents: () => void
   setTheme: (id: string) => void
+  dismissTimeTamper: () => void
   spawnEvent: () => void
   collectEvent: () => void
   expireEvent: () => void
@@ -192,7 +210,7 @@ function computeCps(
   let cps = GENERATORS.reduce((sum, g) => {
     const owned = generators[g.id] ?? 0
     const mult = effects.generatorMultipliers[g.id] ?? 1
-    return sum + owned * g.baseCps * mult
+    return sum + owned * g.baseCps * mult * milestoneMultiplier(owned)
   }, 0)
 
   cps *= effects.globalCpsMultiplier
@@ -215,6 +233,7 @@ function buildDerived(
     | 'lifetimeCrayons'
     | 'commendations'
     | 'prestigeUpgrades'
+    | 'unlockedAchievements'
   >,
   buffs: BuffMultipliers = NO_BUFFS
 ) {
@@ -223,9 +242,16 @@ function buildDerived(
   // Passive Commendation bonus (rate set by prestige upgrades) times any
   // permanent prestige production multipliers.
   const prestige = 1 + state.commendations * pe.bonusPerCommendation
+  // Morale: each earned achievement nudges all production up.
+  const morale = moraleMultiplier(state.unlockedAchievements.length)
   return {
-    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige * pe.cpsMult * buffs.cps,
-    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * buffs.click,
+    cps:
+      computeCps(state.generators, effects, state.unlockedMentors) *
+      prestige *
+      pe.cpsMult *
+      morale *
+      buffs.cps,
+    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * morale * buffs.click,
     rank: getRank(state.lifetimeCrayons),
   }
 }
@@ -254,6 +280,9 @@ function fromSave(saved: SaveState) {
     autoCollectEvents: saved.autoCollectEvents ?? false,
     playtimeSeconds: saved.playtimeSeconds ?? 0,
     selectedTheme: saved.selectedTheme ?? DEFAULT_THEME,
+    lastDailyClaimDay: saved.lastDailyClaimDay ?? null,
+    dailyStreak: saved.dailyStreak ?? 0,
+    clockHighWater: Math.max(saved.clockHighWater ?? 0, saved.lastSavedAt ?? 0),
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -293,6 +322,10 @@ function initialState() {
     autoCollectEvents: false,
     playtimeSeconds: 0,
     selectedTheme: DEFAULT_THEME,
+    lastDailyClaimDay: null as string | null,
+    dailyStreak: 0,
+    clockHighWater: Date.now(),
+    timeTamperMessage: null as string | null,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -311,8 +344,18 @@ export const useGameStore = create<GameState>((set, get) => {
 
   if (saved) {
     const loaded = fromSave(saved)
+
+    // Clock-tamper check: the device clock reading earlier than the highest
+    // timestamp we've ever recorded means the player likely time-traveled and
+    // set the clock back. Offline gains from a negative elapsed are already
+    // nil; this just surfaces the Easter egg. Advance the high-water mark.
+    const now = Date.now()
+    const tampered = now < loaded.clockHighWater - CLOCK_TAMPER_TOLERANCE_MS
+    const clockHighWater = Math.max(loaded.clockHighWater, now)
+    const timeTamperMessage = tampered ? TIME_TAMPER_MESSAGE : null
+
     const offlineCap = computePrestigeEffects(loaded.prestigeUpgrades).offlineCapSeconds
-    const elapsed = Math.min((Date.now() - saved.lastSavedAt) / 1000, offlineCap)
+    const elapsed = Math.min((now - saved.lastSavedAt) / 1000, offlineCap)
     const offlineGain = loaded.cps * elapsed
 
     if (offlineGain > 0.5) {
@@ -331,14 +374,22 @@ export const useGameStore = create<GameState>((set, get) => {
         ...loaded,
         crayons: loaded.crayons + offlineGain,
         lifetimeCrayons: newLifetime,
-        lastSavedAt: Date.now(),
+        lastSavedAt: now,
         offlineMessage,
         unlockedAchievements,
         pendingAchievements: [],
+        clockHighWater,
+        timeTamperMessage,
         ...derived,
       }
     } else {
-      init = { ...loaded, pendingAchievements: [], offlineMessage: null }
+      init = {
+        ...loaded,
+        pendingAchievements: [],
+        offlineMessage: null,
+        clockHighWater,
+        timeTamperMessage,
+      }
     }
   }
 
@@ -365,6 +416,9 @@ export const useGameStore = create<GameState>((set, get) => {
         autoCollectEvents: s.autoCollectEvents,
         playtimeSeconds: s.playtimeSeconds,
         selectedTheme: s.selectedTheme,
+        lastDailyClaimDay: s.lastDailyClaimDay,
+        dailyStreak: s.dailyStreak,
+        clockHighWater: Math.max(s.clockHighWater, Date.now()),
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -498,6 +552,7 @@ export const useGameStore = create<GameState>((set, get) => {
           unlockedMentors: newMentors,
           activeBuffs: buffs,
           playtimeSeconds: s.playtimeSeconds + deltaSeconds,
+          clockHighWater: Math.max(s.clockHighWater, now),
         }
         const merged = {
           ...s,
@@ -550,6 +605,42 @@ export const useGameStore = create<GameState>((set, get) => {
       })
     },
 
+    claimDaily() {
+      const s = get()
+      if (!dailyAvailable(s.lastDailyClaimDay)) return
+      const streak = streakAfterClaim(s.lastDailyClaimDay, s.dailyStreak)
+      const gain = dailyReward(s.cps, streak)
+
+      set((state) => {
+        const next = {
+          crayons: state.crayons + gain,
+          lifetimeCrayons: state.lifetimeCrayons + gain,
+          lastDailyClaimDay: dateKey(),
+          dailyStreak: streak,
+        }
+        // Every 7th consecutive day also kicks off a production frenzy.
+        const activeBuffs =
+          streak % 7 === 0
+            ? [
+                ...state.activeBuffs,
+                {
+                  kind: 'cps' as const,
+                  mult: FRENZY_CPS_MULT,
+                  expiresAt: Date.now() + FRENZY_CPS_MS,
+                  label: 'WEEKLY MORALE',
+                },
+              ]
+            : state.activeBuffs
+        const merged = {
+          ...state,
+          ...next,
+          activeBuffs,
+          ...deriveWithBuffs({ ...state, ...next, activeBuffs }),
+        }
+        return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
     hireManager(id: string) {
       const s = get()
       const def = MANAGERS.find((m) => m.id === id)
@@ -579,6 +670,10 @@ export const useGameStore = create<GameState>((set, get) => {
 
     setTheme(id: string) {
       if (THEMES.some((t) => t.id === id)) set({ selectedTheme: id })
+    },
+
+    dismissTimeTamper() {
+      set({ timeTamperMessage: null })
     },
 
     spawnEvent() {
