@@ -25,7 +25,7 @@ A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, r
 - **Random Marine Events** — golden-crayon drops granting instant windfalls or timed production / click frenzies, with a live buff bar.
 - **Prestige / "Reenlistment"** — every reset is a true crayon clean slate that also wipes generators, run upgrades, and hired NCOs (only the Commendation Exchange and lifetime stats persist). Commendations are earned on a **logarithmic** curve — each one needs ~10× more lifetime crayons than the last — so prestige gets exponentially harder the deeper you go (first one lands several hours in).
 - **Commendation Exchange** — spend Commendations on ~10 permanent meta-upgrades (production/click multipliers, cheaper generators, longer offline cap, faster/bigger events, longer frenzies). Spending lowers your balance — and thus your passive bonus — so it's a real hoard-vs-invest decision (AdVenture-Capitalist-style).
-- **5 mentor legends** — parody-inspired Marine archetypes granting stacking permanent bonuses.
+- **10 mentor legends** — real, deceased legendary Marines (Daly, Butler, Basilone, Puller, Vandegrift, Boyington, Woody Williams, and more) as respectful homage, granting stacking permanent bonuses. (Living recipients are never named — see `docs/AI_GUARDRAILS.md`.)
 - **22-tier rank ladder** — Recruit all the way to Crayon Deity, First Class.
 - **26 achievements** ("Ribbon Rack") with pop-up unlock toasts. Each earned achievement also grants **+1% to all production** (a Cookie-Clicker-style morale/feedback loop).
 - **Daily morale bonus** — a once-per-day claimable reward that scales with production and a consecutive-day login streak (weekly frenzy every 7 days).

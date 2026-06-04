@@ -60,6 +60,15 @@ Historical Marine figures may inspire mechanics and flavor.
 
 Do not introduce real-person likeness systems, monetized hero collections, or legal-risk content without deliberate review.
 
+### Approved decision (project owner, 2026): mentors
+
+The mentor roster uses the **real names of deceased, historically significant Marines** as respectful homage. Rules:
+
+- **Deceased only.** Living service members are never named. If a candidate is alive (e.g. recent Medal of Honor recipients), they are excluded and their slot is filled with an original/parody name supplied by the project owner.
+- **Respectful framing.** Mentor flavor text cites the Marine's real achievement as an honor. The crayon humor never targets the person, their service, or real casualties.
+- **Non-monetized.** Mentors are earned through play, never sold, and there is no likeness/gacha collection system.
+- Before adding any mentor, verify the individual is deceased.
+
 ## Art Direction
 
 Use placeholder assets whenever possible.
