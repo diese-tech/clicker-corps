@@ -3,6 +3,7 @@ import { GENERATORS } from '../data/generators'
 import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
+import { prestigeMultiplier, prestigePotential } from '../data/prestige'
 import { getRank } from '../data/ranks'
 import { generatorCost } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
@@ -18,6 +19,7 @@ interface GameState {
   unlockedMentors: string[]
   unlockedAchievements: string[]
   pendingAchievements: string[]
+  commendations: number
   lastSavedAt: number
   offlineMessage: string | null
 
@@ -31,6 +33,7 @@ interface GameState {
   buyGenerator: (id: string) => void
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
+  reenlist: () => void
   dismissOfflineMessage: () => void
   dismissAchievementToast: () => void
   resetSave: () => void
@@ -76,6 +79,7 @@ function checkAchievements(
     | 'purchasedUpgrades'
     | 'unlockedMentors'
     | 'cps'
+    | 'commendations'
     | 'unlockedAchievements'
     | 'pendingAchievements'
   >
@@ -87,6 +91,7 @@ function checkAchievements(
     purchasedUpgrades: merged.purchasedUpgrades,
     unlockedMentors: merged.unlockedMentors,
     cps: merged.cps,
+    commendations: merged.commendations,
   }
   return evalAchievements(ctx, merged.unlockedAchievements, merged.pendingAchievements)
 }
@@ -127,12 +132,16 @@ function computeCps(
 }
 
 function buildDerived(
-  state: Pick<GameState, 'generators' | 'purchasedUpgrades' | 'unlockedMentors' | 'lifetimeCrayons'>
+  state: Pick<
+    GameState,
+    'generators' | 'purchasedUpgrades' | 'unlockedMentors' | 'lifetimeCrayons' | 'commendations'
+  >
 ) {
   const effects = computeEffects(state.purchasedUpgrades)
+  const prestige = prestigeMultiplier(state.commendations)
   return {
-    cps: computeCps(state.generators, effects, state.unlockedMentors),
-    crayonsPerClick: effects.clickMultiplier,
+    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige,
+    crayonsPerClick: effects.clickMultiplier * prestige,
     rank: getRank(state.lifetimeCrayons),
   }
 }
@@ -146,6 +155,7 @@ function fromSave(saved: SaveState) {
     purchasedUpgrades: saved.purchasedUpgrades,
     unlockedMentors: saved.unlockedMentors,
     unlockedAchievements: saved.unlockedAchievements ?? [],
+    commendations: saved.commendations ?? 0,
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -170,6 +180,7 @@ function initialState() {
     unlockedMentors: [] as string[],
     unlockedAchievements: [] as string[],
     pendingAchievements: [] as string[],
+    commendations: 0,
     lastSavedAt: Date.now(),
     cps: 0,
     crayonsPerClick: 1,
@@ -230,6 +241,7 @@ export const useGameStore = create<GameState>((set, get) => {
         purchasedUpgrades: s.purchasedUpgrades,
         unlockedMentors: s.unlockedMentors,
         unlockedAchievements: s.unlockedAchievements,
+        commendations: s.commendations,
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -315,6 +327,25 @@ export const useGameStore = create<GameState>((set, get) => {
           unlockedMentors: newMentors,
         }
         const merged = { ...s, ...next, ...buildDerived({ ...s, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
+    reenlist() {
+      const s = get()
+      const gain = prestigePotential(s.lifetimeCrayons) - s.commendations
+      if (gain <= 0) return
+
+      set((state) => {
+        // Wipe the run economy; preserve all meta progression (lifetime
+        // crayons, rank, mentors, achievements, total clicks).
+        const base = {
+          crayons: 0,
+          generators: {} as Record<string, number>,
+          purchasedUpgrades: [] as string[],
+          commendations: state.commendations + gain,
+        }
+        const merged = { ...state, ...base, ...buildDerived({ ...state, ...base }) }
         return { ...merged, ...checkAchievements(merged) }
       })
     },

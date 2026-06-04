@@ -26,11 +26,12 @@ The core loop is implemented and runs in the browser. This is a rough prototype 
 - Offline progress calculated on load, capped at 8 hours
 - Reset-save debug button
 - Offline return message ("While you were gone, the Corps consumed X crayons.")
-- 12 achievements ("Ribbon Rack") tracked across clicks, lifetime crayons, generators, upgrades, and mentors, with a pop-up toast on unlock
+- 14 achievements ("Ribbon Rack") tracked across clicks, lifetime crayons, generators, upgrades, mentors, and Commendations, with a pop-up toast on unlock
+- Prestige / "Reenlistment": wipe your run for permanent Commendations (+2% all production each), keeping rank, mentors, and achievements
 
 ### What's NOT in V0 (by design)
 
-Auth, backend, database, cloud saves, ads, payments, analytics, mobile wrappers, Phaser, Godot, multiplayer, leaderboards, prestige systems.
+Auth, backend, database, cloud saves, ads, payments, analytics, mobile wrappers, Phaser, Godot, multiplayer, leaderboards.
 
 ## Running Locally
 
@@ -73,6 +74,7 @@ src/
     ranks.ts            Rank thresholds and lookup
     mentors.ts          Mentor unlock definitions
     achievements.ts     Achievement definitions and unlock predicates
+    prestige.ts         Reenlistment formulas (Commendations + bonus)
   store/
     gameStore.ts        Zustand store — all game state and actions
     effectsHelper.ts    Upgrade effect computation helper
@@ -85,6 +87,7 @@ src/
     GeneratorList.tsx   Buy generators panel
     UpgradeList.tsx     Available upgrades panel
     MentorPanel.tsx     Mentor unlock + progress bar
+    ReenlistPanel.tsx   Prestige panel — Commendations + reenlist button
     AchievementPanel.tsx  Ribbon rack — locked/unlocked achievements
     AchievementToast.tsx  Pop-up notification on achievement unlock
     DebugPanel.tsx      Lifetime stats + reset button
