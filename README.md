@@ -1,6 +1,6 @@
 # Clicker Corps
 
-**Clicker Corps** is a Marine-themed idle clicker prototype where the player feeds crayons to an increasingly motivated jarhead, buys absurd crayon-production upgrades, unlocks mentor-style boosts, and climbs the ranks through increasingly unreasonable quantities of wax-based logistics.
+**Clicker Corps** is a Marine-themed idle clicker where the player feeds crayons to an increasingly motivated jarhead, builds absurd crayon-production infrastructure, hires NCOs to run it, climbs the ranks, and reenlists for permanent power — wax-based logistics taken to unreasonable, expeditionary scale.
 
 ## Candidate Taglines
 
@@ -9,27 +9,28 @@
 
 ## Current Status
 
-**V0 PROTOTYPE — PLAYABLE**
+**PLAYABLE — FULL CORE GAME**
 
-The core loop is implemented and runs in the browser. This is a rough prototype intended to answer one question:
+A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, running entirely in the browser with no backend.
 
-> Can feeding crayons to a jarhead stay funny and satisfying for 5-10 minutes?
+### Features
 
-### What's in V0
+- **Clicking** — feed crayons by hand; click power scales with upgrades, prestige, and frenzies.
+- **10 generators** escalating from a Crayon Box to a worldwide Expeditionary Force, with exponential cost scaling.
+- **Bulk buying** — purchase generators x1 / x10 / x100 / Max.
+- **14 upgrades** — per-generator output doublers, global CPS tiers, click tiers, and cost reductions.
+- **Managers (NCO Corps)** — hire NCOs that auto-reinvest crayons into their generator, with a master Auto-Buy toggle.
+- **Crayon Factory Automation** — opt-in Auto-Requisition (buys affordable upgrades) and Auto-Collect Events.
+- **Random Marine Events** — golden-crayon drops granting instant windfalls or timed production / click frenzies, with a live buff bar.
+- **Prestige / "Reenlistment"** — wipe your run for permanent Commendations (+2% all production each), keeping rank, mentors, managers, and achievements.
+- **5 mentor legends** — parody-inspired Marine archetypes granting stacking permanent bonuses.
+- **15-tier rank ladder** — Recruit all the way to Supreme Allied Crayon Commander.
+- **24 achievements** ("Ribbon Rack") with pop-up unlock toasts.
+- **Statistics** — a Service Record modal summarizing your whole career, including time in service.
+- **Cosmetic themes** — Woodland, Desert, Dress Blues, and Night Ops palettes.
+- **Persistence** — localStorage autosave every 5s, offline progress capped at 8 hours, and a reset-save button.
 
-- Click jarhead to gain crayons
-- 4 passive crayon generators with exponential cost scaling
-- 4 one-time upgrades with multiplier effects
-- 1 mentor unlock (Legendary Chest Puller — +25% all production at 10,000 lifetime crayons)
-- Rank progression: Recruit → Private → PFC → Lance Corporal → Corporal → Sergeant
-- localStorage autosave every 5 seconds
-- Offline progress calculated on load, capped at 8 hours
-- Reset-save debug button
-- Offline return message ("While you were gone, the Corps consumed X crayons.")
-- 14 achievements ("Ribbon Rack") tracked across clicks, lifetime crayons, generators, upgrades, mentors, and Commendations, with a pop-up toast on unlock
-- Prestige / "Reenlistment": wipe your run for permanent Commendations (+2% all production each), keeping rank, mentors, and achievements
-
-### What's NOT in V0 (by design)
+### Out of scope (by design)
 
 Auth, backend, database, cloud saves, ads, payments, analytics, mobile wrappers, Phaser, Godot, multiplayer, leaderboards.
 
@@ -75,21 +76,30 @@ src/
     mentors.ts          Mentor unlock definitions
     achievements.ts     Achievement definitions and unlock predicates
     prestige.ts         Reenlistment formulas (Commendations + bonus)
+    managers.ts         NCO (manager) definitions per generator
+    events.ts           Random event definitions and buff tuning
+    themes.ts           Cosmetic palette definitions
   store/
-    gameStore.ts        Zustand store — all game state and actions
+    gameStore.ts        Zustand store — all game state, actions, automation loops
     effectsHelper.ts    Upgrade effect computation helper
   utils/
-    math.ts             Cost formula and number formatting
+    math.ts             Cost/bulk-cost formulas, number + duration formatting
     save.ts             localStorage read/write/delete
   components/
-    HeaderStats.tsx     Rank, crayons, CPS display
+    HeaderStats.tsx     Rank, crayons, CPS, Commendations display
     ClickArea.tsx       Jarhead button + Feed Crayon button
-    GeneratorList.tsx   Buy generators panel
+    GeneratorList.tsx   Buy generators panel + x1/x10/x100/Max toggle
     UpgradeList.tsx     Available upgrades panel
-    MentorPanel.tsx     Mentor unlock + progress bar
+    ManagerPanel.tsx    NCO Corps — hire managers + auto-buy toggle
+    AutomationPanel.tsx Auto-requisition + auto-collect toggles
+    MentorPanel.tsx     Mentor unlocks + progress bars
     ReenlistPanel.tsx   Prestige panel — Commendations + reenlist button
     AchievementPanel.tsx  Ribbon rack — locked/unlocked achievements
     AchievementToast.tsx  Pop-up notification on achievement unlock
+    MarineEvent.tsx     Floating collectible event
+    BuffBar.tsx         Active-buff countdown chips
+    StatsPanel.tsx      Service Record statistics modal
+    ThemeSwitcher.tsx   Cosmetic theme picker
     DebugPanel.tsx      Lifetime stats + reset button
     OfflineModal.tsx    Offline progress notification
 public/
