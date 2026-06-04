@@ -334,6 +334,23 @@ body {
   color: var(--green-neon);
 }
 
+.gen-milestone-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--black);
+  background: var(--green-neon);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.gen-milestone-hint {
+  font-size: 9px;
+  color: var(--tan);
+}
+
 .gen-right {
   display: flex;
   flex-direction: column;

@@ -3,6 +3,7 @@ import { GENERATORS } from '../data/generators'
 import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
+import { milestoneMultiplier } from '../data/milestones'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { prestigePotential } from '../data/prestige'
 import { computePrestigeEffects, PRESTIGE_UPGRADES } from '../data/prestigeUpgrades'
@@ -192,7 +193,7 @@ function computeCps(
   let cps = GENERATORS.reduce((sum, g) => {
     const owned = generators[g.id] ?? 0
     const mult = effects.generatorMultipliers[g.id] ?? 1
-    return sum + owned * g.baseCps * mult
+    return sum + owned * g.baseCps * mult * milestoneMultiplier(owned)
   }, 0)
 
   cps *= effects.globalCpsMultiplier
