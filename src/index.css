@@ -209,6 +209,60 @@ body {
   margin-bottom: 10px;
 }
 
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--green-light);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-title.no-margin {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.buy-amount-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.amount-btn {
+  background: var(--green-dark);
+  color: var(--tan);
+  border: 1px solid var(--green-light);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.amount-btn:hover {
+  color: var(--green-neon);
+}
+
+.amount-btn.active {
+  background: var(--green-light);
+  color: var(--black);
+  font-weight: bold;
+}
+
+.buy-count {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.buy-cost {
+  display: block;
+}
+
 /* ---- Generator Rows ---- */
 .generator-row {
   display: flex;

@@ -2,6 +2,40 @@ export function generatorCost(baseCost: number, owned: number, costMultiplier = 
   return Math.ceil(baseCost * Math.pow(1.15, owned) * costMultiplier)
 }
 
+// Total cost to buy `amount` consecutive units starting from `owned`.
+export function bulkGeneratorCost(
+  baseCost: number,
+  owned: number,
+  amount: number,
+  costMultiplier = 1
+): number {
+  let total = 0
+  for (let k = 0; k < amount; k++) {
+    total += generatorCost(baseCost, owned + k, costMultiplier)
+  }
+  return total
+}
+
+// How many units `budget` can buy starting from `owned`, plus their total
+// cost. Costs grow 15% per unit, so the count is bounded logarithmically;
+// the cap is a safety net against pathological inputs.
+export function maxAffordableGenerators(
+  baseCost: number,
+  owned: number,
+  budget: number,
+  costMultiplier = 1
+): { count: number; cost: number } {
+  let count = 0
+  let cost = 0
+  while (count < 100000) {
+    const next = generatorCost(baseCost, owned + count, costMultiplier)
+    if (cost + next > budget) break
+    cost += next
+    count++
+  }
+  return { count, cost }
+}
+
 // Suffixes for short-scale large numbers: thousand, million, billion,
 // trillion, then quadrillion onward.
 const SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc']

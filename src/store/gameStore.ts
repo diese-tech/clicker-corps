@@ -5,7 +5,7 @@ import { MENTORS } from '../data/mentors'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { prestigeMultiplier, prestigePotential } from '../data/prestige'
 import { getRank } from '../data/ranks'
-import { generatorCost } from '../utils/math'
+import { bulkGeneratorCost } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
 const MAX_OFFLINE_SECONDS = 60 * 60 * 8
@@ -30,7 +30,7 @@ interface GameState {
 
   // Actions
   click: () => void
-  buyGenerator: (id: string) => void
+  buyGenerator: (id: string, amount?: number) => void
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
   reenlist: () => void
@@ -276,17 +276,17 @@ export const useGameStore = create<GameState>((set, get) => {
       })
     },
 
-    buyGenerator(id: string) {
+    buyGenerator(id: string, amount = 1) {
       const s = get()
       const def = GENERATORS.find((g) => g.id === id)
-      if (!def) return
+      if (!def || amount < 1) return
       const effects = computeEffects(s.purchasedUpgrades)
       const owned = s.generators[id] ?? 0
-      const cost = generatorCost(def.baseCost, owned, effects.generatorCostMultiplier)
+      const cost = bulkGeneratorCost(def.baseCost, owned, amount, effects.generatorCostMultiplier)
       if (s.crayons < cost) return
 
       set((state) => {
-        const newGenerators = { ...state.generators, [id]: (state.generators[id] ?? 0) + 1 }
+        const newGenerators = { ...state.generators, [id]: (state.generators[id] ?? 0) + amount }
         const next = { crayons: state.crayons - cost, generators: newGenerators }
         const merged = { ...state, ...next, ...buildDerived({ ...state, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
