@@ -1,5 +1,6 @@
 import { GENERATORS } from './generators'
 import { UPGRADES } from './upgrades'
+import { MANAGERS } from './managers'
 
 export interface AchievementContext {
   lifetimeCrayons: number
@@ -9,6 +10,7 @@ export interface AchievementContext {
   unlockedMentors: string[]
   cps: number
   commendations: number
+  hiredManagers: string[]
 }
 
 export interface AchievementDef {
@@ -117,5 +119,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     flavor: 'Earned 10 Commendations. Your dress blues need a bigger chest.',
     hint: 'Accumulate 10 Commendations.',
     check: (c) => c.commendations >= 10,
+  },
+  {
+    id: 'put_in_charge',
+    name: 'Put In Charge',
+    flavor: 'Hired your first NCO. Delegation: the finest military tradition.',
+    hint: 'Hire any manager.',
+    check: (c) => c.hiredManagers.length >= 1,
+  },
+  {
+    id: 'whole_chain_of_command',
+    name: 'Whole Chain of Command',
+    flavor: 'Every generator has an NCO. You just supervise the supervisors now.',
+    hint: 'Hire every manager.',
+    check: (c) => c.hiredManagers.length >= MANAGERS.length,
   },
 ]

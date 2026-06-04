@@ -9,6 +9,8 @@ export interface SaveState {
   unlockedMentors: string[]
   unlockedAchievements: string[]
   commendations: number
+  hiredManagers: string[]
+  autoBuyEnabled: boolean
   lastSavedAt: number
 }
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { GENERATORS } from '../data/generators'
 import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
+import { MANAGERS } from '../data/managers'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { prestigeMultiplier, prestigePotential } from '../data/prestige'
 import { getRank } from '../data/ranks'
@@ -14,7 +15,7 @@ import {
   FRENZY_CPS_MULT,
   pickWeightedEvent,
 } from '../data/events'
-import { bulkGeneratorCost } from '../utils/math'
+import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
 const MAX_OFFLINE_SECONDS = 60 * 60 * 8
@@ -71,6 +72,8 @@ interface GameState {
   unlockedAchievements: string[]
   pendingAchievements: string[]
   commendations: number
+  hiredManagers: string[]
+  autoBuyEnabled: boolean
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -87,6 +90,8 @@ interface GameState {
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
   reenlist: () => void
+  hireManager: (id: string) => void
+  toggleAutoBuy: () => void
   spawnEvent: () => void
   collectEvent: () => void
   expireEvent: () => void
@@ -136,6 +141,7 @@ function checkAchievements(
     | 'unlockedMentors'
     | 'cps'
     | 'commendations'
+    | 'hiredManagers'
     | 'unlockedAchievements'
     | 'pendingAchievements'
   >
@@ -148,6 +154,7 @@ function checkAchievements(
     unlockedMentors: merged.unlockedMentors,
     cps: merged.cps,
     commendations: merged.commendations,
+    hiredManagers: merged.hiredManagers,
   }
   return evalAchievements(ctx, merged.unlockedAchievements, merged.pendingAchievements)
 }
@@ -219,6 +226,8 @@ function fromSave(saved: SaveState) {
     unlockedMentors: saved.unlockedMentors,
     unlockedAchievements: saved.unlockedAchievements ?? [],
     commendations: saved.commendations ?? 0,
+    hiredManagers: saved.hiredManagers ?? [],
+    autoBuyEnabled: saved.autoBuyEnabled ?? true,
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -250,6 +259,8 @@ function initialState() {
     unlockedAchievements: [] as string[],
     pendingAchievements: [] as string[],
     commendations: 0,
+    hiredManagers: [] as string[],
+    autoBuyEnabled: true,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -313,11 +324,36 @@ export const useGameStore = create<GameState>((set, get) => {
         unlockedMentors: s.unlockedMentors,
         unlockedAchievements: s.unlockedAchievements,
         commendations: s.commendations,
+        hiredManagers: s.hiredManagers,
+        autoBuyEnabled: s.autoBuyEnabled,
         lastSavedAt: Date.now(),
       })
     }, 5000)
   }
   startAutosave()
+
+  // Auto-buy helper: hired managers reinvest crayons into their generator.
+  // Runs on a gentle cadence (not every frame) and buys cheapest-tier first
+  // so spare crayons cascade up the supply chain.
+  let autoBuyTimer: ReturnType<typeof setInterval> | null = null
+  function startAutoBuy() {
+    if (autoBuyTimer) return
+    autoBuyTimer = setInterval(() => {
+      const s = get()
+      if (!s.autoBuyEnabled || s.hiredManagers.length === 0) return
+      const costMult = computeEffects(s.purchasedUpgrades).generatorCostMultiplier
+      for (const mgr of MANAGERS) {
+        if (!s.hiredManagers.includes(mgr.id)) continue
+        const def = GENERATORS.find((g) => g.id === mgr.generatorId)
+        if (!def) continue
+        const owned = get().generators[mgr.generatorId] ?? 0
+        const { count } = maxAffordableGenerators(def.baseCost, owned, get().crayons, costMult)
+        const buy = Math.min(count, 25) // cap per cycle to keep purchases gradual
+        if (buy > 0) get().buyGenerator(mgr.generatorId, buy)
+      }
+    }, 250)
+  }
+  startAutoBuy()
 
   return {
     ...init,
@@ -428,6 +464,25 @@ export const useGameStore = create<GameState>((set, get) => {
         const merged = { ...state, ...base, ...deriveWithBuffs({ ...state, ...base }) }
         return { ...merged, ...checkAchievements(merged) }
       })
+    },
+
+    hireManager(id: string) {
+      const s = get()
+      const def = MANAGERS.find((m) => m.id === id)
+      if (!def || s.hiredManagers.includes(id) || s.crayons < def.cost) return
+
+      set((state) => {
+        const next = {
+          crayons: state.crayons - def.cost,
+          hiredManagers: [...state.hiredManagers, id],
+        }
+        const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
+    toggleAutoBuy() {
+      set((s) => ({ autoBuyEnabled: !s.autoBuyEnabled }))
     },
 
     spawnEvent() {
