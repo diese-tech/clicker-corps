@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useGameStore } from './store/gameStore'
 import { HeaderStats } from './components/HeaderStats'
+import { DailyBonus } from './components/DailyBonus'
 import { ClickArea } from './components/ClickArea'
 import { GeneratorList } from './components/GeneratorList'
 import { UpgradeList } from './components/UpgradeList'
@@ -70,6 +71,7 @@ export default function App() {
       <MarineEvent />
       <BuffBar />
       <HeaderStats />
+      <DailyBonus />
       <main className="main-layout">
         <div className="left-col">
           <ClickArea />

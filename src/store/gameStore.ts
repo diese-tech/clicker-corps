@@ -19,6 +19,7 @@ import {
   pickWeightedEvent,
 } from '../data/events'
 import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
+import { dateKey, dailyAvailable, streakAfterClaim, dailyReward } from '../utils/daily'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
 // Transient, time-limited production buff granted by a collected event.
@@ -81,6 +82,8 @@ interface GameState {
   autoCollectEvents: boolean
   playtimeSeconds: number
   selectedTheme: string
+  lastDailyClaimDay: string | null
+  dailyStreak: number
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -98,6 +101,7 @@ interface GameState {
   tick: (deltaSeconds: number) => void
   reenlist: () => void
   buyPrestigeUpgrade: (id: string) => void
+  claimDaily: () => void
   hireManager: (id: string) => void
   toggleAutoBuy: () => void
   toggleAutoBuyUpgrades: () => void
@@ -263,6 +267,8 @@ function fromSave(saved: SaveState) {
     autoCollectEvents: saved.autoCollectEvents ?? false,
     playtimeSeconds: saved.playtimeSeconds ?? 0,
     selectedTheme: saved.selectedTheme ?? DEFAULT_THEME,
+    lastDailyClaimDay: saved.lastDailyClaimDay ?? null,
+    dailyStreak: saved.dailyStreak ?? 0,
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -302,6 +308,8 @@ function initialState() {
     autoCollectEvents: false,
     playtimeSeconds: 0,
     selectedTheme: DEFAULT_THEME,
+    lastDailyClaimDay: null as string | null,
+    dailyStreak: 0,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -374,6 +382,8 @@ export const useGameStore = create<GameState>((set, get) => {
         autoCollectEvents: s.autoCollectEvents,
         playtimeSeconds: s.playtimeSeconds,
         selectedTheme: s.selectedTheme,
+        lastDailyClaimDay: s.lastDailyClaimDay,
+        dailyStreak: s.dailyStreak,
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -555,6 +565,42 @@ export const useGameStore = create<GameState>((set, get) => {
           prestigeUpgrades: [...state.prestigeUpgrades, id],
         }
         const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
+        return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
+    claimDaily() {
+      const s = get()
+      if (!dailyAvailable(s.lastDailyClaimDay)) return
+      const streak = streakAfterClaim(s.lastDailyClaimDay, s.dailyStreak)
+      const gain = dailyReward(s.cps, streak)
+
+      set((state) => {
+        const next = {
+          crayons: state.crayons + gain,
+          lifetimeCrayons: state.lifetimeCrayons + gain,
+          lastDailyClaimDay: dateKey(),
+          dailyStreak: streak,
+        }
+        // Every 7th consecutive day also kicks off a production frenzy.
+        const activeBuffs =
+          streak % 7 === 0
+            ? [
+                ...state.activeBuffs,
+                {
+                  kind: 'cps' as const,
+                  mult: FRENZY_CPS_MULT,
+                  expiresAt: Date.now() + FRENZY_CPS_MS,
+                  label: 'WEEKLY MORALE',
+                },
+              ]
+            : state.activeBuffs
+        const merged = {
+          ...state,
+          ...next,
+          activeBuffs,
+          ...deriveWithBuffs({ ...state, ...next, activeBuffs }),
+        }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
