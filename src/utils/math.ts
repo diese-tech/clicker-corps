@@ -48,3 +48,16 @@ export function formatNumber(n: number): string {
   const scaled = n / Math.pow(10, tier * 3)
   return scaled.toFixed(2) + SUFFIXES[tier]
 }
+
+// Formats a duration in seconds as a compact "1d 2h 3m" string.
+export function formatDuration(totalSeconds: number): string {
+  const s = Math.floor(totalSeconds)
+  const days = Math.floor(s / 86400)
+  const hours = Math.floor((s % 86400) / 3600)
+  const mins = Math.floor((s % 3600) / 60)
+  const secs = s % 60
+  if (days > 0) return `${days}d ${hours}h ${mins}m`
+  if (hours > 0) return `${hours}h ${mins}m`
+  if (mins > 0) return `${mins}m ${secs}s`
+  return `${secs}s`
+}

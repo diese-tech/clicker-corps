@@ -74,6 +74,7 @@ interface GameState {
   commendations: number
   hiredManagers: string[]
   autoBuyEnabled: boolean
+  playtimeSeconds: number
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -228,6 +229,7 @@ function fromSave(saved: SaveState) {
     commendations: saved.commendations ?? 0,
     hiredManagers: saved.hiredManagers ?? [],
     autoBuyEnabled: saved.autoBuyEnabled ?? true,
+    playtimeSeconds: saved.playtimeSeconds ?? 0,
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -261,6 +263,7 @@ function initialState() {
     commendations: 0,
     hiredManagers: [] as string[],
     autoBuyEnabled: true,
+    playtimeSeconds: 0,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -326,6 +329,7 @@ export const useGameStore = create<GameState>((set, get) => {
         commendations: s.commendations,
         hiredManagers: s.hiredManagers,
         autoBuyEnabled: s.autoBuyEnabled,
+        playtimeSeconds: s.playtimeSeconds,
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -437,6 +441,7 @@ export const useGameStore = create<GameState>((set, get) => {
           lifetimeCrayons: newLifetime,
           unlockedMentors: newMentors,
           activeBuffs: buffs,
+          playtimeSeconds: s.playtimeSeconds + deltaSeconds,
         }
         const merged = {
           ...s,

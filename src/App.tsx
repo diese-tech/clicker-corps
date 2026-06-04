@@ -8,6 +8,7 @@ import { MentorPanel } from './components/MentorPanel'
 import { ManagerPanel } from './components/ManagerPanel'
 import { ReenlistPanel } from './components/ReenlistPanel'
 import { AchievementPanel } from './components/AchievementPanel'
+import { StatsPanel } from './components/StatsPanel'
 import { AchievementToast } from './components/AchievementToast'
 import { MarineEvent } from './components/MarineEvent'
 import { BuffBar } from './components/BuffBar'
@@ -67,6 +68,7 @@ export default function App() {
           <ReenlistPanel />
           <MentorPanel />
           <AchievementPanel />
+          <StatsPanel />
         </div>
       </main>
       <DebugPanel />

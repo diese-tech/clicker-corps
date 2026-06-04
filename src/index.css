@@ -807,6 +807,66 @@ body {
   font-weight: bold;
 }
 
+/* ---- Statistics ---- */
+.stats-trigger-panel {
+  padding: 8px;
+}
+
+.stats-trigger-btn {
+  width: 100%;
+  background: var(--green-dark);
+  color: var(--tan);
+  border: 1px solid var(--green-light);
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.stats-trigger-btn:hover {
+  color: var(--green-neon);
+  border-color: var(--green-neon);
+}
+
+.stats-modal {
+  text-align: left;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.stats-section {
+  margin-bottom: 16px;
+}
+
+.stats-section-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--green-neon);
+  border-bottom: 1px solid var(--green-light);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.stats-row-label {
+  color: var(--tan);
+}
+
+.stats-row-value {
+  color: var(--cream);
+  font-weight: bold;
+}
+
 /* ---- Debug Panel ---- */
 .debug-panel {
   display: flex;

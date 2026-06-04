@@ -11,6 +11,7 @@ export interface SaveState {
   commendations: number
   hiredManagers: string[]
   autoBuyEnabled: boolean
+  playtimeSeconds: number
   lastSavedAt: number
 }
 
