@@ -71,7 +71,7 @@ The dev server runs at `http://localhost:5173` by default.
 ```
 src/
   main.tsx              Entry point
-  App.tsx               Game loop (rAF tick) and layout
+  App.tsx               Game loop (rAF tick) + tabbed single-screen layout
   index.css             Global styles (military green terminal)
   data/
     generators.ts       Generator definitions and costs
@@ -91,7 +91,7 @@ src/
     save.ts             localStorage read/write/delete
   components/
     HeaderStats.tsx     Rank, crayons, CPS, Commendations display
-    ClickArea.tsx       Jarhead button + Feed Crayon button
+    FeedButton.tsx      Bottom Egg-Inc-style feed control (tap + hold)
     GeneratorList.tsx   Buy generators panel + x1/x10/x100/Max toggle
     UpgradeList.tsx     Available upgrades panel
     ManagerPanel.tsx    NCO Corps — hire managers + auto-buy toggle
