@@ -5,7 +5,8 @@ import { UPGRADES } from '../data/upgrades'
 import { MANAGERS } from '../data/managers'
 import { MENTORS } from '../data/mentors'
 import { ACHIEVEMENTS } from '../data/achievements'
-import { PRESTIGE_BONUS_PER_COMMENDATION, prestigePotential } from '../data/prestige'
+import { prestigePotential } from '../data/prestige'
+import { computePrestigeEffects, PRESTIGE_UPGRADES } from '../data/prestigeUpgrades'
 import { formatNumber, formatDuration } from '../utils/math'
 
 interface StatRow {
@@ -28,7 +29,8 @@ export function StatsPanel() {
   }
 
   const generatorsOwned = Object.values(s.generators).reduce((a, b) => a + b, 0)
-  const claimable = Math.max(0, prestigePotential(s.lifetimeCrayons) - s.commendations)
+  const claimable = Math.max(0, prestigePotential(s.lifetimeCrayons) - s.commendationsEarned)
+  const bonusPer = computePrestigeEffects(s.prestigeUpgrades).bonusPerCommendation
 
   const sections: { title: string; rows: StatRow[] }[] = [
     {
@@ -63,10 +65,15 @@ export function StatsPanel() {
     {
       title: 'PRESTIGE',
       rows: [
-        { label: 'Commendations', value: s.commendations.toLocaleString() },
+        { label: 'Commendations (balance)', value: s.commendations.toLocaleString() },
+        { label: 'Commendations earned', value: s.commendationsEarned.toLocaleString() },
         {
           label: 'Production bonus',
-          value: `+${Math.round(s.commendations * PRESTIGE_BONUS_PER_COMMENDATION * 100)}%`,
+          value: `+${Math.round(s.commendations * bonusPer * 100)}%`,
+        },
+        {
+          label: 'Exchange upgrades',
+          value: `${s.prestigeUpgrades.length} / ${PRESTIGE_UPGRADES.length}`,
         },
         { label: 'Reenlist now for', value: `${claimable.toLocaleString()} 🎖` },
       ],

@@ -1,10 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { formatNumber } from '../utils/math'
-import {
-  PRESTIGE_BONUS_PER_COMMENDATION,
-  lifetimeForCommendations,
-  prestigePotential,
-} from '../data/prestige'
+import { lifetimeForCommendations, prestigePotential } from '../data/prestige'
+import { computePrestigeEffects } from '../data/prestigeUpgrades'
 
 // Reveal the panel a little before the first Commendation is reachable so the
 // player can see the goal coming.
@@ -13,13 +10,17 @@ const REVEAL_AT = lifetimeForCommendations(1) / 2
 export function ReenlistPanel() {
   const lifetimeCrayons = useGameStore((s) => s.lifetimeCrayons)
   const commendations = useGameStore((s) => s.commendations)
+  const commendationsEarned = useGameStore((s) => s.commendationsEarned)
+  const prestigeUpgrades = useGameStore((s) => s.prestigeUpgrades)
   const reenlist = useGameStore((s) => s.reenlist)
 
-  if (lifetimeCrayons < REVEAL_AT && commendations === 0) return null
+  if (lifetimeCrayons < REVEAL_AT && commendationsEarned === 0) return null
 
   const potential = prestigePotential(lifetimeCrayons)
-  const gain = potential - commendations
-  const currentBonusPct = Math.round(commendations * PRESTIGE_BONUS_PER_COMMENDATION * 100)
+  // New Commendations are based on total ever earned, not the current balance.
+  const gain = potential - commendationsEarned
+  const bonusPer = computePrestigeEffects(prestigeUpgrades).bonusPerCommendation
+  const currentBonusPct = Math.round(commendations * bonusPer * 100)
 
   // Progress toward the next unclaimed Commendation.
   const floorAt = lifetimeForCommendations(potential)

@@ -4,7 +4,8 @@ import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
-import { prestigeMultiplier, prestigePotential } from '../data/prestige'
+import { prestigePotential } from '../data/prestige'
+import { computePrestigeEffects, PRESTIGE_UPGRADES } from '../data/prestigeUpgrades'
 import { DEFAULT_THEME, THEMES } from '../data/themes'
 import { getRank } from '../data/ranks'
 import {
@@ -18,8 +19,6 @@ import {
 } from '../data/events'
 import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
-
-const MAX_OFFLINE_SECONDS = 60 * 60 * 8
 
 // Transient, time-limited production buff granted by a collected event.
 export interface Buff {
@@ -73,6 +72,8 @@ interface GameState {
   unlockedAchievements: string[]
   pendingAchievements: string[]
   commendations: number
+  commendationsEarned: number
+  prestigeUpgrades: string[]
   hiredManagers: string[]
   autoBuyEnabled: boolean
   autoBuyUpgrades: boolean
@@ -95,6 +96,7 @@ interface GameState {
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
   reenlist: () => void
+  buyPrestigeUpgrade: (id: string) => void
   hireManager: (id: string) => void
   toggleAutoBuy: () => void
   toggleAutoBuyUpgrades: () => void
@@ -150,6 +152,7 @@ function checkAchievements(
     | 'cps'
     | 'commendations'
     | 'hiredManagers'
+    | 'prestigeUpgrades'
     | 'unlockedAchievements'
     | 'pendingAchievements'
   >
@@ -163,6 +166,7 @@ function checkAchievements(
     cps: merged.cps,
     commendations: merged.commendations,
     hiredManagers: merged.hiredManagers,
+    prestigeUpgrades: merged.prestigeUpgrades,
   }
   return evalAchievements(ctx, merged.unlockedAchievements, merged.pendingAchievements)
 }
@@ -205,15 +209,23 @@ function computeCps(
 function buildDerived(
   state: Pick<
     GameState,
-    'generators' | 'purchasedUpgrades' | 'unlockedMentors' | 'lifetimeCrayons' | 'commendations'
+    | 'generators'
+    | 'purchasedUpgrades'
+    | 'unlockedMentors'
+    | 'lifetimeCrayons'
+    | 'commendations'
+    | 'prestigeUpgrades'
   >,
   buffs: BuffMultipliers = NO_BUFFS
 ) {
   const effects = computeEffects(state.purchasedUpgrades)
-  const prestige = prestigeMultiplier(state.commendations)
+  const pe = computePrestigeEffects(state.prestigeUpgrades)
+  // Passive Commendation bonus (rate set by prestige upgrades) times any
+  // permanent prestige production multipliers.
+  const prestige = 1 + state.commendations * pe.bonusPerCommendation
   return {
-    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige * buffs.cps,
-    crayonsPerClick: effects.clickMultiplier * prestige * buffs.click,
+    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige * pe.cpsMult * buffs.cps,
+    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * buffs.click,
     rank: getRank(state.lifetimeCrayons),
   }
 }
@@ -234,6 +246,8 @@ function fromSave(saved: SaveState) {
     unlockedMentors: saved.unlockedMentors,
     unlockedAchievements: saved.unlockedAchievements ?? [],
     commendations: saved.commendations ?? 0,
+    commendationsEarned: saved.commendationsEarned ?? saved.commendations ?? 0,
+    prestigeUpgrades: saved.prestigeUpgrades ?? [],
     hiredManagers: saved.hiredManagers ?? [],
     autoBuyEnabled: saved.autoBuyEnabled ?? true,
     autoBuyUpgrades: saved.autoBuyUpgrades ?? false,
@@ -271,6 +285,8 @@ function initialState() {
     unlockedAchievements: [] as string[],
     pendingAchievements: [] as string[],
     commendations: 0,
+    commendationsEarned: 0,
+    prestigeUpgrades: [] as string[],
     hiredManagers: [] as string[],
     autoBuyEnabled: true,
     autoBuyUpgrades: false,
@@ -294,8 +310,9 @@ export const useGameStore = create<GameState>((set, get) => {
   let offlineMessage: string | null = null
 
   if (saved) {
-    const elapsed = Math.min((Date.now() - saved.lastSavedAt) / 1000, MAX_OFFLINE_SECONDS)
     const loaded = fromSave(saved)
+    const offlineCap = computePrestigeEffects(loaded.prestigeUpgrades).offlineCapSeconds
+    const elapsed = Math.min((Date.now() - saved.lastSavedAt) / 1000, offlineCap)
     const offlineGain = loaded.cps * elapsed
 
     if (offlineGain > 0.5) {
@@ -340,6 +357,8 @@ export const useGameStore = create<GameState>((set, get) => {
         unlockedMentors: s.unlockedMentors,
         unlockedAchievements: s.unlockedAchievements,
         commendations: s.commendations,
+        commendationsEarned: s.commendationsEarned,
+        prestigeUpgrades: s.prestigeUpgrades,
         hiredManagers: s.hiredManagers,
         autoBuyEnabled: s.autoBuyEnabled,
         autoBuyUpgrades: s.autoBuyUpgrades,
@@ -377,7 +396,9 @@ export const useGameStore = create<GameState>((set, get) => {
 
       // Managers reinvest crayons into their generator.
       if (s.autoBuyEnabled && s.hiredManagers.length > 0) {
-        const costMult = computeEffects(get().purchasedUpgrades).generatorCostMultiplier
+        const costMult =
+          computeEffects(get().purchasedUpgrades).generatorCostMultiplier *
+          computePrestigeEffects(get().prestigeUpgrades).costMult
         for (const mgr of MANAGERS) {
           if (!s.hiredManagers.includes(mgr.id)) continue
           const def = GENERATORS.find((g) => g.id === mgr.generatorId)
@@ -424,9 +445,11 @@ export const useGameStore = create<GameState>((set, get) => {
       const s = get()
       const def = GENERATORS.find((g) => g.id === id)
       if (!def || amount < 1) return
-      const effects = computeEffects(s.purchasedUpgrades)
+      const costMult =
+        computeEffects(s.purchasedUpgrades).generatorCostMultiplier *
+        computePrestigeEffects(s.prestigeUpgrades).costMult
       const owned = s.generators[id] ?? 0
-      const cost = bulkGeneratorCost(def.baseCost, owned, amount, effects.generatorCostMultiplier)
+      const cost = bulkGeneratorCost(def.baseCost, owned, amount, costMult)
       if (s.crayons < cost) return
 
       set((state) => {
@@ -487,19 +510,42 @@ export const useGameStore = create<GameState>((set, get) => {
 
     reenlist() {
       const s = get()
-      const gain = prestigePotential(s.lifetimeCrayons) - s.commendations
+      // New Commendations are based on total ever EARNED, so spending them at
+      // the Exchange never gets refunded by a later reenlistment.
+      const gain = prestigePotential(s.lifetimeCrayons) - s.commendationsEarned
       if (gain <= 0) return
 
       set((state) => {
         // Wipe the run economy; preserve all meta progression (lifetime
-        // crayons, rank, mentors, achievements, total clicks).
+        // crayons, rank, mentors, achievements, total clicks). Awarded
+        // Commendations add to both the spendable balance and earned total.
         const base = {
           crayons: 0,
           generators: {} as Record<string, number>,
           purchasedUpgrades: [] as string[],
           commendations: state.commendations + gain,
+          commendationsEarned: state.commendationsEarned + gain,
         }
         const merged = { ...state, ...base, ...deriveWithBuffs({ ...state, ...base }) }
+        return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
+    buyPrestigeUpgrade(id: string) {
+      const s = get()
+      const def = PRESTIGE_UPGRADES.find((u) => u.id === id)
+      if (!def || s.prestigeUpgrades.includes(id)) return
+      if (def.requires && !s.prestigeUpgrades.includes(def.requires)) return
+      if (s.commendations < def.cost) return
+
+      set((state) => {
+        // Spending lowers the Commendation balance — and therefore the passive
+        // production bonus — in exchange for a permanent upgrade.
+        const next = {
+          commendations: state.commendations - def.cost,
+          prestigeUpgrades: [...state.prestigeUpgrades, id],
+        }
+        const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
@@ -556,11 +602,12 @@ export const useGameStore = create<GameState>((set, get) => {
       const ev = s.activeEvent
       if (!ev) return
       const now = Date.now()
+      const pe = computePrestigeEffects(s.prestigeUpgrades)
 
       if (ev.id === 'windfall') {
         // A lump worth ~40s of current production, with a floor so early-game
-        // crates still feel rewarding.
-        const gain = Math.max(s.cps * 40, s.crayons * 0.13, 25)
+        // crates still feel rewarding. Scaled by prestige event-reward bonus.
+        const gain = Math.max(s.cps * 40, s.crayons * 0.13, 25) * pe.eventRewardMult
         set((state) => {
           const next = {
             crayons: state.crayons + gain,
@@ -573,10 +620,11 @@ export const useGameStore = create<GameState>((set, get) => {
         return
       }
 
+      const dur = pe.frenzyDurationMult
       const buff: Buff =
         ev.id === 'motivation_surge'
-          ? { kind: 'cps', mult: FRENZY_CPS_MULT, expiresAt: now + FRENZY_CPS_MS, label: ev.label }
-          : { kind: 'click', mult: FRENZY_CLICK_MULT, expiresAt: now + FRENZY_CLICK_MS, label: ev.label }
+          ? { kind: 'cps', mult: FRENZY_CPS_MULT, expiresAt: now + FRENZY_CPS_MS * dur, label: ev.label }
+          : { kind: 'click', mult: FRENZY_CLICK_MULT, expiresAt: now + FRENZY_CLICK_MS * dur, label: ev.label }
 
       set((state) => {
         const next = { activeBuffs: [...state.activeBuffs, buff], activeEvent: null }

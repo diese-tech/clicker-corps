@@ -8,6 +8,7 @@ import { MentorPanel } from './components/MentorPanel'
 import { ManagerPanel } from './components/ManagerPanel'
 import { AutomationPanel } from './components/AutomationPanel'
 import { ReenlistPanel } from './components/ReenlistPanel'
+import { CommendationExchange } from './components/CommendationExchange'
 import { AchievementPanel } from './components/AchievementPanel'
 import { StatsPanel } from './components/StatsPanel'
 import { ThemeSwitcher } from './components/ThemeSwitcher'
@@ -17,6 +18,7 @@ import { BuffBar } from './components/BuffBar'
 import { DebugPanel } from './components/DebugPanel'
 import { OfflineModal } from './components/OfflineModal'
 import { EVENT_MAX_INTERVAL_MS, EVENT_MIN_INTERVAL_MS } from './data/events'
+import { computePrestigeEffects } from './data/prestigeUpgrades'
 
 export default function App() {
   const tick = useGameStore((s) => s.tick)
@@ -47,8 +49,11 @@ export default function App() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
     function schedule() {
+      // Mess Hall Privileges (and other prestige perks) can shorten the gap.
+      const mult = computePrestigeEffects(useGameStore.getState().prestigeUpgrades).eventIntervalMult
       const delay =
-        EVENT_MIN_INTERVAL_MS + Math.random() * (EVENT_MAX_INTERVAL_MS - EVENT_MIN_INTERVAL_MS)
+        (EVENT_MIN_INTERVAL_MS + Math.random() * (EVENT_MAX_INTERVAL_MS - EVENT_MIN_INTERVAL_MS)) *
+        mult
       timer = setTimeout(() => {
         spawnEvent()
         schedule()
@@ -75,6 +80,7 @@ export default function App() {
           <ManagerPanel />
           <AutomationPanel />
           <ReenlistPanel />
+          <CommendationExchange />
           <MentorPanel />
           <AchievementPanel />
           <ThemeSwitcher />
