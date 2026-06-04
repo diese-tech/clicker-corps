@@ -7,6 +7,7 @@ export interface SaveState {
   generators: Record<string, number>
   purchasedUpgrades: string[]
   unlockedMentors: string[]
+  unlockedAchievements: string[]
   lastSavedAt: number
 }
 

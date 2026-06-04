@@ -5,6 +5,8 @@ import { ClickArea } from './components/ClickArea'
 import { GeneratorList } from './components/GeneratorList'
 import { UpgradeList } from './components/UpgradeList'
 import { MentorPanel } from './components/MentorPanel'
+import { AchievementPanel } from './components/AchievementPanel'
+import { AchievementToast } from './components/AchievementToast'
 import { DebugPanel } from './components/DebugPanel'
 import { OfflineModal } from './components/OfflineModal'
 
@@ -29,6 +31,7 @@ export default function App() {
   return (
     <div className="app">
       <OfflineModal />
+      <AchievementToast />
       <HeaderStats />
       <main className="main-layout">
         <div className="left-col">
@@ -38,6 +41,7 @@ export default function App() {
           <UpgradeList />
           <GeneratorList />
           <MentorPanel />
+          <AchievementPanel />
         </div>
       </main>
       <DebugPanel />
