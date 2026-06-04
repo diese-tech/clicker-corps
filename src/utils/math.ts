@@ -2,10 +2,15 @@ export function generatorCost(baseCost: number, owned: number, costMultiplier = 
   return Math.ceil(baseCost * Math.pow(1.15, owned) * costMultiplier)
 }
 
+// Suffixes for short-scale large numbers: thousand, million, billion,
+// trillion, then quadrillion onward.
+const SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc']
+
 export function formatNumber(n: number): string {
-  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T'
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B'
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M'
-  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K'
-  return Math.floor(n).toString()
+  if (!isFinite(n)) return '∞'
+  if (n < 1000) return Math.floor(n).toString()
+
+  const tier = Math.min(Math.floor(Math.log10(n) / 3), SUFFIXES.length - 1)
+  const scaled = n / Math.pow(10, tier * 3)
+  return scaled.toFixed(2) + SUFFIXES[tier]
 }

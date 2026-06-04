@@ -4,13 +4,19 @@ import { generatorCost, formatNumber } from '../utils/math'
 import { computeEffectsForCostMultiplier } from '../store/effectsHelper'
 
 export function GeneratorList() {
-  const { crayons, generators, purchasedUpgrades, buyGenerator } = useGameStore()
+  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, buyGenerator } = useGameStore()
   const costMult = computeEffectsForCostMultiplier(purchasedUpgrades)
+
+  // Progressive reveal: show a generator once it's owned or the player has
+  // earned within reach of its base cost. Keeps the early game uncluttered.
+  const visible = GENERATORS.filter(
+    (g) => (generators[g.id] ?? 0) > 0 || lifetimeCrayons >= g.baseCost * 0.5
+  )
 
   return (
     <section className="panel">
       <h2 className="panel-title">SUPPLY CHAIN</h2>
-      {GENERATORS.map((g) => {
+      {visible.map((g) => {
         const owned = generators[g.id] ?? 0
         const cost = generatorCost(g.baseCost, owned, costMult)
         const affordable = crayons >= cost

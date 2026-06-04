@@ -10,6 +10,15 @@ export const RANKS: RankDef[] = [
   { name: 'Lance Corporal', required: 2500 },
   { name: 'Corporal', required: 10000 },
   { name: 'Sergeant', required: 50000 },
+  { name: 'Staff Sergeant', required: 250000 },
+  { name: 'Gunnery Sergeant', required: 1000000 },
+  { name: 'Master Sergeant', required: 5000000 },
+  { name: 'First Sergeant', required: 20000000 },
+  { name: 'Master Gunnery Sergeant', required: 100000000 },
+  { name: 'Sergeant Major', required: 500000000 },
+  { name: 'Sergeant Major of the Corps', required: 2500000000 },
+  { name: 'Crayon Czar', required: 15000000000 },
+  { name: 'Supreme Allied Crayon Commander', required: 100000000000 },
 ]
 
 export function getRank(lifetimeCrayons: number): string {

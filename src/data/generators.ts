@@ -6,6 +6,9 @@ export interface GeneratorDef {
   flavor: string
 }
 
+// Escalates from one Marine rooting through a crayon box to entire
+// expeditionary forces running on industrial-grade wax logistics. Costs and
+// output follow idle-game scaling (~10x cost, ~6x output per tier).
 export const GENERATORS: GeneratorDef[] = [
   {
     id: 'crayon_box',
@@ -26,7 +29,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Supply Sergeant',
     baseCost: 1100,
     baseCps: 8,
-    flavor: "Nobody knows where the crayons came from. Do not ask.",
+    flavor: 'Nobody knows where the crayons came from. Do not ask.',
   },
   {
     id: 'motor_pool_cache',
@@ -34,5 +37,47 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 12000,
     baseCps: 47,
     flavor: 'Found behind a broken Humvee. Still edible.',
+  },
+  {
+    id: 'fire_team_forage',
+    name: 'Fire Team Forage',
+    baseCost: 130000,
+    baseCps: 260,
+    flavor: 'Four Marines, one mission: locate snacks. Overwhelming success.',
+  },
+  {
+    id: 'squad_supply_drop',
+    name: 'Squad Supply Drop',
+    baseCost: 1400000,
+    baseCps: 1400,
+    flavor: 'Airdropped pallet. 90% crayons, 10% MREs nobody will eat.',
+  },
+  {
+    id: 'platoon_pallet',
+    name: 'Platoon Pallet',
+    baseCost: 20000000,
+    baseCps: 7800,
+    flavor: 'Shrink-wrapped, forklift-certified, dangerously delicious.',
+  },
+  {
+    id: 'company_convoy',
+    name: 'Company Convoy',
+    baseCost: 330000000,
+    baseCps: 44000,
+    flavor: 'A mile-long convoy hauling nothing but wax. Logistics weeps.',
+  },
+  {
+    id: 'battalion_depot',
+    name: 'Battalion Depot',
+    baseCost: 5100000000,
+    baseCps: 260000,
+    flavor: 'An entire warehouse the supply chief swears does not exist.',
+  },
+  {
+    id: 'expeditionary_force',
+    name: 'Expeditionary Force',
+    baseCost: 75000000000,
+    baseCps: 1600000,
+    flavor: 'Deployed worldwide to secure the strategic crayon reserve.',
   },
 ]
