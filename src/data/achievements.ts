@@ -8,6 +8,7 @@ export interface AchievementContext {
   purchasedUpgrades: string[]
   unlockedMentors: string[]
   cps: number
+  commendations: number
 }
 
 export interface AchievementDef {
@@ -102,5 +103,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     flavor: 'Hit 100 crayons per second. Please go see your NCO.',
     hint: 'Reach 100 crayons per second.',
     check: (c) => c.cps >= 100,
+  },
+  {
+    id: 'lifer',
+    name: 'Lifer',
+    flavor: 'Reenlisted at least once. The civilian world can keep waiting.',
+    hint: 'Reenlist for your first Commendation.',
+    check: (c) => c.commendations >= 1,
+  },
+  {
+    id: 'highly_decorated',
+    name: 'Highly Decorated',
+    flavor: 'Earned 10 Commendations. Your dress blues need a bigger chest.',
+    hint: 'Accumulate 10 Commendations.',
+    check: (c) => c.commendations >= 10,
   },
 ]

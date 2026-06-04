@@ -5,6 +5,7 @@ import { ClickArea } from './components/ClickArea'
 import { GeneratorList } from './components/GeneratorList'
 import { UpgradeList } from './components/UpgradeList'
 import { MentorPanel } from './components/MentorPanel'
+import { ReenlistPanel } from './components/ReenlistPanel'
 import { AchievementPanel } from './components/AchievementPanel'
 import { AchievementToast } from './components/AchievementToast'
 import { DebugPanel } from './components/DebugPanel'
@@ -40,6 +41,7 @@ export default function App() {
         <div className="right-col">
           <UpgradeList />
           <GeneratorList />
+          <ReenlistPanel />
           <MentorPanel />
           <AchievementPanel />
         </div>

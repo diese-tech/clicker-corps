@@ -8,6 +8,7 @@ export interface SaveState {
   purchasedUpgrades: string[]
   unlockedMentors: string[]
   unlockedAchievements: string[]
+  commendations: number
   lastSavedAt: number
 }
 

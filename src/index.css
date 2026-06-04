@@ -387,6 +387,102 @@ body {
   transition: width 0.3s;
 }
 
+/* ---- Reenlistment (Prestige) Panel ---- */
+.commendation-bonus {
+  color: var(--green-neon);
+  font-size: 13px;
+}
+
+.reenlist-summary {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.reenlist-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.reenlist-stat-value {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--green-neon);
+}
+
+.reenlist-stat-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--tan);
+}
+
+.reenlist-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.reenlist-btn {
+  width: 100%;
+  background: var(--green-mid);
+  color: var(--tan);
+  border: 2px solid var(--green-light);
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background 0.1s, box-shadow 0.1s;
+}
+
+.reenlist-btn.ready {
+  color: var(--black);
+  background: var(--green-light);
+  border-color: var(--green-neon);
+}
+
+.reenlist-btn.ready:hover {
+  background: var(--green-neon);
+  box-shadow: 0 0 12px var(--green-neon);
+}
+
+.reenlist-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reenlist-progress-row {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reenlist-progress-bar {
+  height: 6px;
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  overflow: hidden;
+}
+
+.reenlist-progress-fill {
+  height: 100%;
+  background: var(--green-neon);
+  transition: width 0.3s;
+}
+
+.reenlist-progress-hint {
+  font-size: 10px;
+  color: var(--tan);
+  text-align: center;
+}
+
 /* ---- Achievement Panel ---- */
 .ach-count {
   float: right;
