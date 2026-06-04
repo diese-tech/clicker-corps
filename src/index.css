@@ -660,6 +660,80 @@ body {
   }
 }
 
+/* ---- Marine Event (collectible) ---- */
+.marine-event {
+  position: fixed;
+  z-index: 150;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--green-mid);
+  border: 2px solid var(--green-neon);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 20px var(--green-neon);
+  animation: event-pulse 1s ease-in-out infinite;
+}
+
+.marine-event:hover {
+  box-shadow: 0 0 32px var(--green-neon);
+}
+
+@keyframes event-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+.marine-event-icon {
+  font-size: 28px;
+}
+
+.marine-event-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--green-neon);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* ---- Active Buff Bar ---- */
+.buff-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 140;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.buff-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-mid);
+  border: 1px solid var(--green-neon);
+  padding: 4px 10px;
+  box-shadow: 0 0 10px rgba(124, 252, 0, 0.4);
+}
+
+.buff-chip-label {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--green-neon);
+  letter-spacing: 1px;
+}
+
+.buff-chip-time {
+  font-size: 11px;
+  color: var(--cream);
+  font-weight: bold;
+}
+
 /* ---- Debug Panel ---- */
 .debug-panel {
   display: flex;

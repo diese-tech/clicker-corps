@@ -5,10 +5,61 @@ import { MENTORS } from '../data/mentors'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { prestigeMultiplier, prestigePotential } from '../data/prestige'
 import { getRank } from '../data/ranks'
+import {
+  EventId,
+  EVENT_LIFESPAN_MS,
+  FRENZY_CLICK_MS,
+  FRENZY_CLICK_MULT,
+  FRENZY_CPS_MS,
+  FRENZY_CPS_MULT,
+  pickWeightedEvent,
+} from '../data/events'
 import { bulkGeneratorCost } from '../utils/math'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
 const MAX_OFFLINE_SECONDS = 60 * 60 * 8
+
+// Transient, time-limited production buff granted by a collected event.
+export interface Buff {
+  kind: 'cps' | 'click'
+  mult: number
+  expiresAt: number
+  label: string
+}
+
+// On-screen collectible event awaiting a click.
+export interface ActiveEvent {
+  id: EventId
+  label: string
+  flavor: string
+  // Position as a percentage of the viewport so it renders responsively.
+  xPct: number
+  yPct: number
+  expiresAt: number
+}
+
+interface BuffMultipliers {
+  cps: number
+  click: number
+}
+
+const NO_BUFFS: BuffMultipliers = { cps: 1, click: 1 }
+
+function activeBuffMultipliers(buffs: Buff[], now: number): BuffMultipliers {
+  let cps = 1
+  let click = 1
+  for (const b of buffs) {
+    if (b.expiresAt <= now) continue
+    if (b.kind === 'cps') cps *= b.mult
+    else click *= b.mult
+  }
+  return { cps, click }
+}
+
+function pruneBuffs(buffs: Buff[], now: number): Buff[] {
+  const live = buffs.filter((b) => b.expiresAt > now)
+  return live.length === buffs.length ? buffs : live
+}
 
 interface GameState {
   crayons: number
@@ -20,6 +71,8 @@ interface GameState {
   unlockedAchievements: string[]
   pendingAchievements: string[]
   commendations: number
+  activeBuffs: Buff[]
+  activeEvent: ActiveEvent | null
   lastSavedAt: number
   offlineMessage: string | null
 
@@ -34,6 +87,9 @@ interface GameState {
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
   reenlist: () => void
+  spawnEvent: () => void
+  collectEvent: () => void
+  expireEvent: () => void
   dismissOfflineMessage: () => void
   dismissAchievementToast: () => void
   resetSave: () => void
@@ -135,15 +191,22 @@ function buildDerived(
   state: Pick<
     GameState,
     'generators' | 'purchasedUpgrades' | 'unlockedMentors' | 'lifetimeCrayons' | 'commendations'
-  >
+  >,
+  buffs: BuffMultipliers = NO_BUFFS
 ) {
   const effects = computeEffects(state.purchasedUpgrades)
   const prestige = prestigeMultiplier(state.commendations)
   return {
-    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige,
-    crayonsPerClick: effects.clickMultiplier * prestige,
+    cps: computeCps(state.generators, effects, state.unlockedMentors) * prestige * buffs.cps,
+    crayonsPerClick: effects.clickMultiplier * prestige * buffs.click,
     rank: getRank(state.lifetimeCrayons),
   }
+}
+
+// Recomputes derived values with the player's currently-active event buffs
+// folded in, so clicks/purchases/ticks all reflect live frenzies.
+function deriveWithBuffs(state: Parameters<typeof buildDerived>[0] & { activeBuffs: Buff[] }) {
+  return buildDerived(state, activeBuffMultipliers(state.activeBuffs, Date.now()))
 }
 
 function fromSave(saved: SaveState) {
@@ -167,7 +230,13 @@ function fromSave(saved: SaveState) {
     [],
     false
   )
-  return { ...base, ...derived, unlockedAchievements }
+  return {
+    ...base,
+    ...derived,
+    unlockedAchievements,
+    activeBuffs: [] as Buff[],
+    activeEvent: null as ActiveEvent | null,
+  }
 }
 
 function initialState() {
@@ -181,6 +250,8 @@ function initialState() {
     unlockedAchievements: [] as string[],
     pendingAchievements: [] as string[],
     commendations: 0,
+    activeBuffs: [] as Buff[],
+    activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
     cps: 0,
     crayonsPerClick: 1,
@@ -271,7 +342,7 @@ export const useGameStore = create<GameState>((set, get) => {
           totalClicks: newClicks,
           unlockedMentors: newMentors,
         }
-        const merged = { ...s, ...next, ...buildDerived({ ...s, ...next }) }
+        const merged = { ...s, ...next, ...deriveWithBuffs({ ...s, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
@@ -288,7 +359,7 @@ export const useGameStore = create<GameState>((set, get) => {
       set((state) => {
         const newGenerators = { ...state.generators, [id]: (state.generators[id] ?? 0) + amount }
         const next = { crayons: state.crayons - cost, generators: newGenerators }
-        const merged = { ...state, ...next, ...buildDerived({ ...state, ...next }) }
+        const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
@@ -302,14 +373,18 @@ export const useGameStore = create<GameState>((set, get) => {
       set((state) => {
         const newPurchased = [...state.purchasedUpgrades, id]
         const next = { crayons: state.crayons - def.cost, purchasedUpgrades: newPurchased }
-        const merged = { ...state, ...next, ...buildDerived({ ...state, ...next }) }
+        const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
 
     tick(deltaSeconds: number) {
       set((s) => {
-        if (s.cps === 0) return {}
+        const now = Date.now()
+        const buffs = pruneBuffs(s.activeBuffs, now)
+        // Nothing to do when idle with no buffs to age out.
+        if (s.cps === 0 && buffs === s.activeBuffs && buffs.length === 0) return {}
+
         const gained = s.cps * deltaSeconds
         const newLifetime = s.lifetimeCrayons + gained
 
@@ -325,8 +400,13 @@ export const useGameStore = create<GameState>((set, get) => {
           crayons: s.crayons + gained,
           lifetimeCrayons: newLifetime,
           unlockedMentors: newMentors,
+          activeBuffs: buffs,
         }
-        const merged = { ...s, ...next, ...buildDerived({ ...s, ...next }) }
+        const merged = {
+          ...s,
+          ...next,
+          ...buildDerived({ ...s, ...next }, activeBuffMultipliers(buffs, now)),
+        }
         return { ...merged, ...checkAchievements(merged) }
       })
     },
@@ -345,9 +425,62 @@ export const useGameStore = create<GameState>((set, get) => {
           purchasedUpgrades: [] as string[],
           commendations: state.commendations + gain,
         }
-        const merged = { ...state, ...base, ...buildDerived({ ...state, ...base }) }
+        const merged = { ...state, ...base, ...deriveWithBuffs({ ...state, ...base }) }
         return { ...merged, ...checkAchievements(merged) }
       })
+    },
+
+    spawnEvent() {
+      // Don't stack events; one collectible on screen at a time.
+      if (get().activeEvent) return
+      const def = pickWeightedEvent()
+      set({
+        activeEvent: {
+          id: def.id,
+          label: def.label,
+          flavor: def.flavor,
+          xPct: 12 + Math.random() * 70, // keep clear of the screen edges
+          yPct: 22 + Math.random() * 56,
+          expiresAt: Date.now() + EVENT_LIFESPAN_MS,
+        },
+      })
+    },
+
+    collectEvent() {
+      const s = get()
+      const ev = s.activeEvent
+      if (!ev) return
+      const now = Date.now()
+
+      if (ev.id === 'windfall') {
+        // A lump worth ~40s of current production, with a floor so early-game
+        // crates still feel rewarding.
+        const gain = Math.max(s.cps * 40, s.crayons * 0.13, 25)
+        set((state) => {
+          const next = {
+            crayons: state.crayons + gain,
+            lifetimeCrayons: state.lifetimeCrayons + gain,
+            activeEvent: null,
+          }
+          const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
+          return { ...merged, ...checkAchievements(merged) }
+        })
+        return
+      }
+
+      const buff: Buff =
+        ev.id === 'motivation_surge'
+          ? { kind: 'cps', mult: FRENZY_CPS_MULT, expiresAt: now + FRENZY_CPS_MS, label: ev.label }
+          : { kind: 'click', mult: FRENZY_CLICK_MULT, expiresAt: now + FRENZY_CLICK_MS, label: ev.label }
+
+      set((state) => {
+        const next = { activeBuffs: [...state.activeBuffs, buff], activeEvent: null }
+        return { ...next, ...deriveWithBuffs({ ...state, ...next }) }
+      })
+    },
+
+    expireEvent() {
+      if (get().activeEvent) set({ activeEvent: null })
     },
 
     dismissOfflineMessage() {
