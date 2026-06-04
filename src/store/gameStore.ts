@@ -74,6 +74,8 @@ interface GameState {
   commendations: number
   hiredManagers: string[]
   autoBuyEnabled: boolean
+  autoBuyUpgrades: boolean
+  autoCollectEvents: boolean
   playtimeSeconds: number
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
@@ -93,6 +95,8 @@ interface GameState {
   reenlist: () => void
   hireManager: (id: string) => void
   toggleAutoBuy: () => void
+  toggleAutoBuyUpgrades: () => void
+  toggleAutoCollectEvents: () => void
   spawnEvent: () => void
   collectEvent: () => void
   expireEvent: () => void
@@ -229,6 +233,8 @@ function fromSave(saved: SaveState) {
     commendations: saved.commendations ?? 0,
     hiredManagers: saved.hiredManagers ?? [],
     autoBuyEnabled: saved.autoBuyEnabled ?? true,
+    autoBuyUpgrades: saved.autoBuyUpgrades ?? false,
+    autoCollectEvents: saved.autoCollectEvents ?? false,
     playtimeSeconds: saved.playtimeSeconds ?? 0,
     lastSavedAt: saved.lastSavedAt,
   }
@@ -263,6 +269,8 @@ function initialState() {
     commendations: 0,
     hiredManagers: [] as string[],
     autoBuyEnabled: true,
+    autoBuyUpgrades: false,
+    autoCollectEvents: false,
     playtimeSeconds: 0,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
@@ -329,6 +337,8 @@ export const useGameStore = create<GameState>((set, get) => {
         commendations: s.commendations,
         hiredManagers: s.hiredManagers,
         autoBuyEnabled: s.autoBuyEnabled,
+        autoBuyUpgrades: s.autoBuyUpgrades,
+        autoCollectEvents: s.autoCollectEvents,
         playtimeSeconds: s.playtimeSeconds,
         lastSavedAt: Date.now(),
       })
@@ -344,16 +354,33 @@ export const useGameStore = create<GameState>((set, get) => {
     if (autoBuyTimer) return
     autoBuyTimer = setInterval(() => {
       const s = get()
-      if (!s.autoBuyEnabled || s.hiredManagers.length === 0) return
-      const costMult = computeEffects(s.purchasedUpgrades).generatorCostMultiplier
-      for (const mgr of MANAGERS) {
-        if (!s.hiredManagers.includes(mgr.id)) continue
-        const def = GENERATORS.find((g) => g.id === mgr.generatorId)
-        if (!def) continue
-        const owned = get().generators[mgr.generatorId] ?? 0
-        const { count } = maxAffordableGenerators(def.baseCost, owned, get().crayons, costMult)
-        const buy = Math.min(count, 25) // cap per cycle to keep purchases gradual
-        if (buy > 0) get().buyGenerator(mgr.generatorId, buy)
+
+      // Auto-requisition: buy any affordable, unlocked upgrade (cheapest
+      // first) before reinvesting into generators.
+      if (s.autoBuyUpgrades) {
+        const affordable = UPGRADES.filter(
+          (u) =>
+            !get().purchasedUpgrades.includes(u.id) &&
+            u.unlockCondition(get().lifetimeCrayons, get().generators) &&
+            get().crayons >= u.cost
+        ).sort((a, b) => a.cost - b.cost)
+        for (const u of affordable) {
+          if (get().crayons >= u.cost) get().buyUpgrade(u.id)
+        }
+      }
+
+      // Managers reinvest crayons into their generator.
+      if (s.autoBuyEnabled && s.hiredManagers.length > 0) {
+        const costMult = computeEffects(get().purchasedUpgrades).generatorCostMultiplier
+        for (const mgr of MANAGERS) {
+          if (!s.hiredManagers.includes(mgr.id)) continue
+          const def = GENERATORS.find((g) => g.id === mgr.generatorId)
+          if (!def) continue
+          const owned = get().generators[mgr.generatorId] ?? 0
+          const { count } = maxAffordableGenerators(def.baseCost, owned, get().crayons, costMult)
+          const buy = Math.min(count, 25) // cap per cycle to keep purchases gradual
+          if (buy > 0) get().buyGenerator(mgr.generatorId, buy)
+        }
       }
     }, 250)
   }
@@ -488,6 +515,14 @@ export const useGameStore = create<GameState>((set, get) => {
 
     toggleAutoBuy() {
       set((s) => ({ autoBuyEnabled: !s.autoBuyEnabled }))
+    },
+
+    toggleAutoBuyUpgrades() {
+      set((s) => ({ autoBuyUpgrades: !s.autoBuyUpgrades }))
+    },
+
+    toggleAutoCollectEvents() {
+      set((s) => ({ autoCollectEvents: !s.autoCollectEvents }))
     },
 
     spawnEvent() {

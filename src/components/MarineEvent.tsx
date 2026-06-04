@@ -5,6 +5,7 @@ export function MarineEvent() {
   const activeEvent = useGameStore((s) => s.activeEvent)
   const collectEvent = useGameStore((s) => s.collectEvent)
   const expireEvent = useGameStore((s) => s.expireEvent)
+  const autoCollectEvents = useGameStore((s) => s.autoCollectEvents)
 
   // Auto-expire the collectible if the player doesn't grab it in time.
   useEffect(() => {
@@ -13,6 +14,13 @@ export function MarineEvent() {
     const timer = setTimeout(expireEvent, remaining)
     return () => clearTimeout(timer)
   }, [activeEvent, expireEvent])
+
+  // Auto-collect (if unlocked) after a short delay so the player still sees it.
+  useEffect(() => {
+    if (!activeEvent || !autoCollectEvents) return
+    const timer = setTimeout(collectEvent, 1500)
+    return () => clearTimeout(timer)
+  }, [activeEvent, autoCollectEvents, collectEvent])
 
   if (!activeEvent) return null
 

@@ -807,6 +807,40 @@ body {
   font-weight: bold;
 }
 
+/* ---- Automation Panel ---- */
+.automation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74, 124, 40, 0.3);
+}
+
+.automation-row:last-child {
+  border-bottom: none;
+}
+
+.automation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.automation-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.automation-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
 /* ---- Statistics ---- */
 .stats-trigger-panel {
   padding: 8px;

@@ -6,6 +6,7 @@ import { GeneratorList } from './components/GeneratorList'
 import { UpgradeList } from './components/UpgradeList'
 import { MentorPanel } from './components/MentorPanel'
 import { ManagerPanel } from './components/ManagerPanel'
+import { AutomationPanel } from './components/AutomationPanel'
 import { ReenlistPanel } from './components/ReenlistPanel'
 import { AchievementPanel } from './components/AchievementPanel'
 import { StatsPanel } from './components/StatsPanel'
@@ -65,6 +66,7 @@ export default function App() {
           <UpgradeList />
           <GeneratorList />
           <ManagerPanel />
+          <AutomationPanel />
           <ReenlistPanel />
           <MentorPanel />
           <AchievementPanel />
