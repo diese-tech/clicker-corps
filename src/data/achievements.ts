@@ -2,6 +2,7 @@ import { GENERATORS } from './generators'
 import { UPGRADES } from './upgrades'
 import { MANAGERS } from './managers'
 import { MENTORS } from './mentors'
+import { PRESTIGE_UPGRADES } from './prestigeUpgrades'
 
 export interface AchievementContext {
   lifetimeCrayons: number
@@ -12,6 +13,7 @@ export interface AchievementContext {
   cps: number
   commendations: number
   hiredManagers: string[]
+  prestigeUpgrades: string[]
 }
 
 export interface AchievementDef {
@@ -141,5 +143,19 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     flavor: 'Every generator has an NCO. You just supervise the supervisors now.',
     hint: 'Hire every manager.',
     check: (c) => c.hiredManagers.length >= MANAGERS.length,
+  },
+  {
+    id: 'spent_my_ribbons',
+    name: 'Spent My Ribbons',
+    flavor: 'Cashed in a Commendation at the Exchange. Worth every percent.',
+    hint: 'Buy a Commendation Exchange upgrade.',
+    check: (c) => c.prestigeUpgrades.length >= 1,
+  },
+  {
+    id: 'fully_vested',
+    name: 'Fully Vested',
+    flavor: 'Bought out the entire Commendation Exchange. The Corps owes you nothing.',
+    hint: 'Buy every Commendation Exchange upgrade.',
+    check: (c) => c.prestigeUpgrades.length >= PRESTIGE_UPGRADES.length,
   },
 ]

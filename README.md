@@ -22,7 +22,8 @@ A complete idle loop in the spirit of Cookie Clicker and AdVenture Capitalist, r
 - **Managers (NCO Corps)** — hire NCOs that auto-reinvest crayons into their generator, with a master Auto-Buy toggle.
 - **Crayon Factory Automation** — opt-in Auto-Requisition (buys affordable upgrades) and Auto-Collect Events.
 - **Random Marine Events** — golden-crayon drops granting instant windfalls or timed production / click frenzies, with a live buff bar.
-- **Prestige / "Reenlistment"** — wipe your run for permanent Commendations (+2% all production each), keeping rank, mentors, managers, and achievements.
+- **Prestige / "Reenlistment"** — every reset is a true crayon clean slate; you earn Commendations (each grants a passive production bonus) based on total lifetime crayons.
+- **Commendation Exchange** — spend Commendations on ~10 permanent meta-upgrades (production/click multipliers, cheaper generators, longer offline cap, faster/bigger events, longer frenzies). Spending lowers your balance — and thus your passive bonus — so it's a real hoard-vs-invest decision (AdVenture-Capitalist-style).
 - **5 mentor legends** — parody-inspired Marine archetypes granting stacking permanent bonuses.
 - **15-tier rank ladder** — Recruit all the way to Supreme Allied Crayon Commander.
 - **24 achievements** ("Ribbon Rack") with pop-up unlock toasts.

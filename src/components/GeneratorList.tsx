@@ -6,15 +6,16 @@ import {
   maxAffordableGenerators,
   formatNumber,
 } from '../utils/math'
-import { computeEffectsForCostMultiplier } from '../store/effectsHelper'
+import { totalCostMultiplier } from '../store/effectsHelper'
 
 type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
 
 export function GeneratorList() {
-  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, buyGenerator } = useGameStore()
+  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, buyGenerator } =
+    useGameStore()
   const [buyAmount, setBuyAmount] = useState<BuyAmount>(1)
-  const costMult = computeEffectsForCostMultiplier(purchasedUpgrades)
+  const costMult = totalCostMultiplier(purchasedUpgrades, prestigeUpgrades)
 
   // Progressive reveal: show a generator once it's owned or the player has
   // earned within reach of its base cost. Keeps the early game uncluttered.

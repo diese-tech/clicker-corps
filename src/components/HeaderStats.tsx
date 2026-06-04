@@ -1,10 +1,11 @@
 import { useGameStore } from '../store/gameStore'
 import { formatNumber } from '../utils/math'
-import { PRESTIGE_BONUS_PER_COMMENDATION } from '../data/prestige'
+import { computePrestigeEffects } from '../data/prestigeUpgrades'
 
 export function HeaderStats() {
-  const { crayons, cps, rank, commendations } = useGameStore()
-  const prestigeBonusPct = Math.round(commendations * PRESTIGE_BONUS_PER_COMMENDATION * 100)
+  const { crayons, cps, rank, commendations, prestigeUpgrades } = useGameStore()
+  const bonusPer = computePrestigeEffects(prestigeUpgrades).bonusPerCommendation
+  const prestigeBonusPct = Math.round(commendations * bonusPer * 100)
 
   return (
     <header className="header-stats">

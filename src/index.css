@@ -545,6 +545,76 @@ body {
   letter-spacing: 1px;
 }
 
+/* ---- Commendation Exchange ---- */
+.exchange-balance {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--green-neon);
+  white-space: nowrap;
+}
+
+.exchange-note {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.exchange-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(74, 124, 40, 0.3);
+}
+
+.exchange-row:last-child {
+  border-bottom: none;
+}
+
+.exchange-row.owned .exchange-name {
+  color: var(--green-neon);
+}
+
+.exchange-row.locked {
+  opacity: 0.5;
+}
+
+.exchange-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.exchange-name {
+  font-weight: bold;
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.exchange-flavor {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+.exchange-req {
+  font-size: 10px;
+  color: var(--red);
+}
+
+.exchange-owned-badge {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--green-neon);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
 /* ---- Reenlistment (Prestige) Panel ---- */
 .commendation-bonus {
   color: var(--green-neon);
