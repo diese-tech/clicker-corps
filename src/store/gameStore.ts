@@ -263,6 +263,14 @@ function deriveWithBuffs(state: Parameters<typeof buildDerived>[0] & { activeBuf
 }
 
 function fromSave(saved: SaveState) {
+  // Heal saves created under the old square-root prestige formula: a player
+  // can never have earned more Commendations than the current curve entitles
+  // them to for their lifetime crayons. Clamp both the earned total and the
+  // spendable balance so old "nuclear" saves snap back to a sane value.
+  const earnedCap = prestigePotential(saved.lifetimeCrayons)
+  const healedEarned = Math.min(saved.commendationsEarned ?? saved.commendations ?? 0, earnedCap)
+  const healedBalance = Math.min(saved.commendations ?? 0, healedEarned)
+
   const base = {
     crayons: saved.crayons,
     lifetimeCrayons: saved.lifetimeCrayons,
@@ -271,8 +279,8 @@ function fromSave(saved: SaveState) {
     purchasedUpgrades: saved.purchasedUpgrades,
     unlockedMentors: saved.unlockedMentors,
     unlockedAchievements: saved.unlockedAchievements ?? [],
-    commendations: saved.commendations ?? 0,
-    commendationsEarned: saved.commendationsEarned ?? saved.commendations ?? 0,
+    commendations: healedBalance,
+    commendationsEarned: healedEarned,
     prestigeUpgrades: saved.prestigeUpgrades ?? [],
     hiredManagers: saved.hiredManagers ?? [],
     autoBuyEnabled: saved.autoBuyEnabled ?? true,
@@ -571,13 +579,16 @@ export const useGameStore = create<GameState>((set, get) => {
       if (gain <= 0) return
 
       set((state) => {
-        // Wipe the run economy; preserve all meta progression (lifetime
-        // crayons, rank, mentors, achievements, total clicks). Awarded
+        // Wipe the run economy AND everything bought during the run — crayons,
+        // generators, run upgrades, and hired NCOs all reset. Only meta
+        // progression is preserved: lifetime crayons, rank, mentors,
+        // achievements, total clicks, and the Commendation Exchange. Awarded
         // Commendations add to both the spendable balance and earned total.
         const base = {
           crayons: 0,
           generators: {} as Record<string, number>,
           purchasedUpgrades: [] as string[],
+          hiredManagers: [] as string[],
           commendations: state.commendations + gain,
           commendationsEarned: state.commendationsEarned + gain,
         }

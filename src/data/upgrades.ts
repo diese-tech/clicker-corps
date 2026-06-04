@@ -1,3 +1,5 @@
+import { GENERATORS } from './generators'
+
 export interface UpgradeDef {
   id: string
   name: string
@@ -25,7 +27,7 @@ function doubleGenerator(id: string) {
   })
 }
 
-export const UPGRADES: UpgradeDef[] = [
+const STATIC_UPGRADES: UpgradeDef[] = [
   {
     id: 'better_crayons',
     name: 'Better Crayons',
@@ -140,4 +142,73 @@ export const UPGRADES: UpgradeDef[] = [
     unlockCondition: (lifetime) => lifetime >= 10000000000,
     applyEffect: (s) => ({ ...s, globalCpsMultiplier: s.globalCpsMultiplier * 2 }),
   },
+]
+
+// Per-generator "Mark" upgrades: each doubles that generator's output once you
+// own enough of it. Generated for every generator so there is always a next
+// upgrade to chase as you scale a tier up. Cost tracks the price of the
+// threshold-th unit, so high tiers stay appropriately expensive.
+const MARK_TIERS = [25, 50, 100, 200]
+const MARK_NAMES = ['Mk II', 'Mk III', 'Mk IV', 'Mk V']
+
+function generatorMarkUpgrades(): UpgradeDef[] {
+  const out: UpgradeDef[] = []
+  GENERATORS.forEach((g) => {
+    MARK_TIERS.forEach((thr, i) => {
+      out.push({
+        id: `gen_${g.id}_t${thr}`,
+        name: `${g.name} ${MARK_NAMES[i]}`,
+        cost: Math.ceil(g.baseCost * Math.pow(1.15, thr) * 7),
+        flavor: `Owning ${thr}+ ${g.name} units doubles their output.`,
+        unlockCondition: (_lifetime, generators) => (generators[g.id] ?? 0) >= thr,
+        applyEffect: doubleGenerator(g.id),
+      })
+    })
+  })
+  return out
+}
+
+// Additional global ×2 doctrines spread across the late curve, plus higher
+// click tiers, so power keeps arriving instead of front-loading into a few
+// cheap globals.
+const LATE_GLOBALS: { id: string; name: string; flavor: string; lifetime: number }[] = [
+  { id: 'combined_arms', name: 'Combined Arms', lifetime: 1e12, flavor: 'Everyone yelling in unison, finally.' },
+  { id: 'total_force', name: 'Total Force Doctrine', lifetime: 1e14, flavor: 'Active, reserve, and the crayon-eating contingent.' },
+  { id: 'full_spectrum', name: 'Full-Spectrum Dominance', lifetime: 1e16, flavor: 'We own the whole box of colors now.' },
+  { id: 'overwhelming_force', name: 'Overwhelming Force', lifetime: 1e18, flavor: 'Subtlety was never the plan.' },
+]
+
+const LATE_CLICKS: { id: string; name: string; flavor: string; lifetime: number }[] = [
+  { id: 'industrial_sharpener', name: 'Industrial Sharpener', lifetime: 5e6, flavor: 'Sharpens crayons into ballistic precision.' },
+  { id: 'diamond_tongue', name: 'Diamond-Tipped Tongue', lifetime: 5e9, flavor: 'Tastes the difference between cerulean and sky blue.' },
+  { id: 'tactical_palate', name: 'Tactical Palate', lifetime: 5e12, flavor: 'Certified crayon sommelier, combat-deployed.' },
+]
+
+function lateGlobalUpgrades(): UpgradeDef[] {
+  return LATE_GLOBALS.map((u) => ({
+    id: u.id,
+    name: u.name,
+    cost: Math.ceil(u.lifetime * 2),
+    flavor: u.flavor,
+    unlockCondition: (lifetime: number) => lifetime >= u.lifetime,
+    applyEffect: (s: UpgradeEffectState) => ({ ...s, globalCpsMultiplier: s.globalCpsMultiplier * 2 }),
+  }))
+}
+
+function lateClickUpgrades(): UpgradeDef[] {
+  return LATE_CLICKS.map((u) => ({
+    id: u.id,
+    name: u.name,
+    cost: Math.ceil(u.lifetime),
+    flavor: u.flavor,
+    unlockCondition: (lifetime: number) => lifetime >= u.lifetime,
+    applyEffect: (s: UpgradeEffectState) => ({ ...s, clickMultiplier: s.clickMultiplier * 2 }),
+  }))
+}
+
+export const UPGRADES: UpgradeDef[] = [
+  ...STATIC_UPGRADES,
+  ...generatorMarkUpgrades(),
+  ...lateGlobalUpgrades(),
+  ...lateClickUpgrades(),
 ]

@@ -557,6 +557,14 @@ body {
   font-style: italic;
 }
 
+.upgrade-more {
+  font-size: 10px;
+  color: var(--tan);
+  font-style: italic;
+  text-align: center;
+  margin-top: 8px;
+}
+
 /* ---- Buy Button ---- */
 .buy-btn {
   background: var(--green-mid);

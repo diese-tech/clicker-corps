@@ -3,9 +3,9 @@ import { formatNumber } from '../utils/math'
 import { lifetimeForCommendations, prestigePotential } from '../data/prestige'
 import { computePrestigeEffects } from '../data/prestigeUpgrades'
 
-// Reveal the panel a little before the first Commendation is reachable so the
-// player can see the goal coming.
-const REVEAL_AT = lifetimeForCommendations(1) / 2
+// The panel lives in the Prestige tab, so reveal it early (once the player has
+// a little traction) — the progress bar then communicates the long road ahead.
+const REVEAL_AT = 1000
 
 export function ReenlistPanel() {
   const lifetimeCrayons = useGameStore((s) => s.lifetimeCrayons)
