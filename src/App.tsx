@@ -10,6 +10,7 @@ import { AutomationPanel } from './components/AutomationPanel'
 import { ReenlistPanel } from './components/ReenlistPanel'
 import { AchievementPanel } from './components/AchievementPanel'
 import { StatsPanel } from './components/StatsPanel'
+import { ThemeSwitcher } from './components/ThemeSwitcher'
 import { AchievementToast } from './components/AchievementToast'
 import { MarineEvent } from './components/MarineEvent'
 import { BuffBar } from './components/BuffBar'
@@ -20,6 +21,12 @@ import { EVENT_MAX_INTERVAL_MS, EVENT_MIN_INTERVAL_MS } from './data/events'
 export default function App() {
   const tick = useGameStore((s) => s.tick)
   const spawnEvent = useGameStore((s) => s.spawnEvent)
+  const selectedTheme = useGameStore((s) => s.selectedTheme)
+
+  // Apply the cosmetic theme by setting a data-theme attribute the CSS keys off.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', selectedTheme)
+  }, [selectedTheme])
 
   useEffect(() => {
     let last = performance.now()
@@ -70,6 +77,7 @@ export default function App() {
           <ReenlistPanel />
           <MentorPanel />
           <AchievementPanel />
+          <ThemeSwitcher />
           <StatsPanel />
         </div>
       </main>

@@ -14,6 +14,37 @@
   --font-mono:   'Courier New', Courier, monospace;
 }
 
+/* ---- Cosmetic Themes (reskin via CSS variable overrides) ---- */
+:root[data-theme='desert'] {
+  --green-dark:  #2b2416;
+  --green-mid:   #4a3f28;
+  --green-light: #8a7440;
+  --green-neon:  #e8c860;
+  --cream:       #f0e6cc;
+  --tan:         #c9b882;
+  --brown:       #5a4424;
+}
+
+:root[data-theme='dress_blues'] {
+  --green-dark:  #0a1226;
+  --green-mid:   #14264d;
+  --green-light: #2a4a8a;
+  --green-neon:  #d4af37;
+  --cream:       #f5f0e6;
+  --tan:         #aebbdd;
+  --brown:       #3a2a1e;
+}
+
+:root[data-theme='night_ops'] {
+  --green-dark:  #0a0a0a;
+  --green-mid:   #181818;
+  --green-light: #3a3a3a;
+  --green-neon:  #ffae00;
+  --cream:       #dcdcdc;
+  --tan:         #8a8a8a;
+  --brown:       #2a2418;
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -839,6 +870,45 @@ body {
   font-size: 10px;
   color: var(--tan);
   font-style: italic;
+}
+
+/* ---- Theme Switcher ---- */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.theme-swatch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: box-shadow 0.1s, transform 0.05s;
+}
+
+.theme-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.theme-swatch.active {
+  box-shadow: 0 0 10px currentColor;
+}
+
+.theme-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.theme-name {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 /* ---- Statistics ---- */

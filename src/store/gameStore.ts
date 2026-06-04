@@ -5,6 +5,7 @@ import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
 import { ACHIEVEMENTS, AchievementContext } from '../data/achievements'
 import { prestigeMultiplier, prestigePotential } from '../data/prestige'
+import { DEFAULT_THEME, THEMES } from '../data/themes'
 import { getRank } from '../data/ranks'
 import {
   EventId,
@@ -77,6 +78,7 @@ interface GameState {
   autoBuyUpgrades: boolean
   autoCollectEvents: boolean
   playtimeSeconds: number
+  selectedTheme: string
   activeBuffs: Buff[]
   activeEvent: ActiveEvent | null
   lastSavedAt: number
@@ -97,6 +99,7 @@ interface GameState {
   toggleAutoBuy: () => void
   toggleAutoBuyUpgrades: () => void
   toggleAutoCollectEvents: () => void
+  setTheme: (id: string) => void
   spawnEvent: () => void
   collectEvent: () => void
   expireEvent: () => void
@@ -236,6 +239,7 @@ function fromSave(saved: SaveState) {
     autoBuyUpgrades: saved.autoBuyUpgrades ?? false,
     autoCollectEvents: saved.autoCollectEvents ?? false,
     playtimeSeconds: saved.playtimeSeconds ?? 0,
+    selectedTheme: saved.selectedTheme ?? DEFAULT_THEME,
     lastSavedAt: saved.lastSavedAt,
   }
   const derived = buildDerived(base)
@@ -272,6 +276,7 @@ function initialState() {
     autoBuyUpgrades: false,
     autoCollectEvents: false,
     playtimeSeconds: 0,
+    selectedTheme: DEFAULT_THEME,
     activeBuffs: [] as Buff[],
     activeEvent: null as ActiveEvent | null,
     lastSavedAt: Date.now(),
@@ -340,6 +345,7 @@ export const useGameStore = create<GameState>((set, get) => {
         autoBuyUpgrades: s.autoBuyUpgrades,
         autoCollectEvents: s.autoCollectEvents,
         playtimeSeconds: s.playtimeSeconds,
+        selectedTheme: s.selectedTheme,
         lastSavedAt: Date.now(),
       })
     }, 5000)
@@ -523,6 +529,10 @@ export const useGameStore = create<GameState>((set, get) => {
 
     toggleAutoCollectEvents() {
       set((s) => ({ autoCollectEvents: !s.autoCollectEvents }))
+    },
+
+    setTheme(id: string) {
+      if (THEMES.some((t) => t.id === id)) set({ selectedTheme: id })
     },
 
     spawnEvent() {

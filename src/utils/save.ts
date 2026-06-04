@@ -14,6 +14,7 @@ export interface SaveState {
   autoBuyUpgrades: boolean
   autoCollectEvents: boolean
   playtimeSeconds: number
+  selectedTheme: string
   lastSavedAt: number
 }
 
