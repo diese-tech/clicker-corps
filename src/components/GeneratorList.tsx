@@ -13,7 +13,7 @@ type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
 
 export function GeneratorList() {
-  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, buyGenerator } =
+  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, hiredManagers, buyGenerator } =
     useGameStore()
   const [buyAmount, setBuyAmount] = useState<BuyAmount>(1)
   const costMult = totalCostMultiplier(purchasedUpgrades, prestigeUpgrades)
@@ -70,6 +70,9 @@ export function GeneratorList() {
               <span className="gen-name">
                 {g.name}
                 {milestoneMult > 1 && <span className="gen-milestone-badge">×{milestoneMult}</span>}
+                {hiredManagers.includes(`mgr_${g.id}`) && (
+                  <span className="gen-nco-badge">NCO ×2</span>
+                )}
               </span>
               <span className="gen-flavor">{g.flavor}</span>
               <span className="gen-cps">{formatNumber(contribution)} crayons/sec</span>

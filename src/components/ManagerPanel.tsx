@@ -4,46 +4,46 @@ import { GENERATORS } from '../data/generators'
 import { formatNumber } from '../utils/math'
 
 export function ManagerPanel() {
-  const { crayons, generators, hiredManagers, autoBuyEnabled, hireManager, toggleAutoBuy } =
-    useGameStore()
+  const { crayons, generators, hiredManagers, hireManager } = useGameStore()
 
-  // Only offer a manager once the player owns the generator it runs.
-  const visible = MANAGERS.filter(
-    (m) => (generators[m.generatorId] ?? 0) > 0 || hiredManagers.includes(m.id)
-  )
+  // Show all managers whose generator the player has at least heard of (visible
+  // in the supply chain) so they can plan ahead, but lock ones for generators
+  // they haven't reached yet.
+  const lifetimeCrayons = useGameStore((s) => s.lifetimeCrayons)
+
+  const visible = MANAGERS.filter((m) => {
+    const gen = GENERATORS.find((g) => g.id === m.generatorId)
+    if (!gen) return false
+    return (generators[m.generatorId] ?? 0) > 0 || lifetimeCrayons >= gen.baseCost * 0.5
+  })
+
   if (visible.length === 0) return null
-
-  const anyHired = hiredManagers.length > 0
 
   return (
     <section className="panel">
-      <div className="panel-header">
-        <h2 className="panel-title no-margin">NCO CORPS</h2>
-        {anyHired && (
-          <button
-            className={`autobuy-toggle ${autoBuyEnabled ? 'on' : 'off'}`}
-            onClick={toggleAutoBuy}
-            title="When on, hired NCOs automatically reinvest crayons into their generator."
-          >
-            AUTO-BUY: {autoBuyEnabled ? 'ON' : 'OFF'}
-          </button>
-        )}
-      </div>
+      <h2 className="panel-title">NCO CORPS</h2>
 
       {visible.map((m) => {
         const hired = hiredManagers.includes(m.id)
         const gen = GENERATORS.find((g) => g.id === m.generatorId)
-        const affordable = crayons >= m.cost
+        const owned = generators[m.generatorId] ?? 0
+        const locked = owned === 0
+        const affordable = !locked && !hired && crayons >= m.cost
 
         return (
-          <div key={m.id} className={`manager-row ${hired ? 'hired' : ''}`}>
+          <div
+            key={m.id}
+            className={`manager-row ${hired ? 'hired' : ''} ${locked ? 'locked' : ''}`}
+          >
             <div className="manager-info">
               <span className="manager-name">{m.name}</span>
+              <span className="manager-assignment">×2 {gen?.name ?? m.generatorId} output</span>
               <span className="manager-flavor">{m.flavor}</span>
-              <span className="manager-runs">Runs: {gen?.name ?? m.generatorId}</span>
             </div>
             {hired ? (
               <span className="manager-hired-badge">✓ ON DUTY</span>
+            ) : locked ? (
+              <span className="manager-locked-badge">LOCKED</span>
             ) : (
               <button
                 className="buy-btn"
