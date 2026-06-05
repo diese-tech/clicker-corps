@@ -12,7 +12,6 @@ export interface SaveState {
   commendationsEarned: number
   prestigeUpgrades: string[]
   hiredManagers: string[]
-  autoBuyEnabled: boolean
   autoBuyUpgrades: boolean
   autoCollectEvents: boolean
   playtimeSeconds: number

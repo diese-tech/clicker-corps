@@ -18,7 +18,7 @@ import {
   FRENZY_CPS_MULT,
   pickWeightedEvent,
 } from '../data/events'
-import { bulkGeneratorCost, maxAffordableGenerators } from '../utils/math'
+import { bulkGeneratorCost } from '../utils/math'
 import { dateKey, dailyAvailable, streakAfterClaim, dailyReward } from '../utils/daily'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
 
@@ -87,7 +87,6 @@ interface GameState {
   commendationsEarned: number
   prestigeUpgrades: string[]
   hiredManagers: string[]
-  autoBuyEnabled: boolean
   autoBuyUpgrades: boolean
   autoCollectEvents: boolean
   playtimeSeconds: number
@@ -115,7 +114,6 @@ interface GameState {
   buyPrestigeUpgrade: (id: string) => void
   claimDaily: () => void
   hireManager: (id: string) => void
-  toggleAutoBuy: () => void
   toggleAutoBuyUpgrades: () => void
   toggleAutoCollectEvents: () => void
   setTheme: (id: string) => void
@@ -205,12 +203,16 @@ function computeEffects(purchased: string[]): UpgradeEffectState {
 function computeCps(
   generators: Record<string, number>,
   effects: UpgradeEffectState,
-  unlockedMentors: string[]
+  unlockedMentors: string[],
+  hiredManagers: string[]
 ): number {
   let cps = GENERATORS.reduce((sum, g) => {
     const owned = generators[g.id] ?? 0
-    const mult = effects.generatorMultipliers[g.id] ?? 1
-    return sum + owned * g.baseCps * mult * milestoneMultiplier(owned)
+    const upgradeMult = effects.generatorMultipliers[g.id] ?? 1
+    const milestoneMult = milestoneMultiplier(owned)
+    // Each hired NCO doubles their generator's output permanently.
+    const ncoMult = hiredManagers.includes(`mgr_${g.id}`) ? 2 : 1
+    return sum + owned * g.baseCps * upgradeMult * milestoneMult * ncoMult
   }, 0)
 
   cps *= effects.globalCpsMultiplier
@@ -230,6 +232,7 @@ function buildDerived(
     | 'generators'
     | 'purchasedUpgrades'
     | 'unlockedMentors'
+    | 'hiredManagers'
     | 'lifetimeCrayons'
     | 'commendations'
     | 'prestigeUpgrades'
@@ -246,7 +249,7 @@ function buildDerived(
   const morale = moraleMultiplier(state.unlockedAchievements.length)
   return {
     cps:
-      computeCps(state.generators, effects, state.unlockedMentors) *
+      computeCps(state.generators, effects, state.unlockedMentors, state.hiredManagers) *
       prestige *
       pe.cpsMult *
       morale *
@@ -283,7 +286,6 @@ function fromSave(saved: SaveState) {
     commendationsEarned: healedEarned,
     prestigeUpgrades: saved.prestigeUpgrades ?? [],
     hiredManagers: saved.hiredManagers ?? [],
-    autoBuyEnabled: saved.autoBuyEnabled ?? true,
     autoBuyUpgrades: saved.autoBuyUpgrades ?? false,
     autoCollectEvents: saved.autoCollectEvents ?? false,
     playtimeSeconds: saved.playtimeSeconds ?? 0,
@@ -325,7 +327,6 @@ function initialState() {
     commendationsEarned: 0,
     prestigeUpgrades: [] as string[],
     hiredManagers: [] as string[],
-    autoBuyEnabled: true,
     autoBuyUpgrades: false,
     autoCollectEvents: false,
     playtimeSeconds: 0,
@@ -419,7 +420,6 @@ export const useGameStore = create<GameState>((set, get) => {
         commendationsEarned: s.commendationsEarned,
         prestigeUpgrades: s.prestigeUpgrades,
         hiredManagers: s.hiredManagers,
-        autoBuyEnabled: s.autoBuyEnabled,
         autoBuyUpgrades: s.autoBuyUpgrades,
         autoCollectEvents: s.autoCollectEvents,
         playtimeSeconds: s.playtimeSeconds,
@@ -433,47 +433,27 @@ export const useGameStore = create<GameState>((set, get) => {
   }
   startAutosave()
 
-  // Auto-buy helper: hired managers reinvest crayons into their generator.
-  // Runs on a gentle cadence (not every frame) and buys cheapest-tier first
-  // so spare crayons cascade up the supply chain.
-  let autoBuyTimer: ReturnType<typeof setInterval> | null = null
-  function startAutoBuy() {
-    if (autoBuyTimer) return
-    autoBuyTimer = setInterval(() => {
+  // Auto-requisition timer: when the player has enabled Auto-Requisition,
+  // buy any affordable unlocked upgrade each tick. NCOs no longer auto-buy
+  // generators — they provide a passive ×2 multiplier instead.
+  let autoReqTimer: ReturnType<typeof setInterval> | null = null
+  function startAutoReq() {
+    if (autoReqTimer) return
+    autoReqTimer = setInterval(() => {
       const s = get()
-
-      // Auto-requisition: buy any affordable, unlocked upgrade (cheapest
-      // first) before reinvesting into generators.
-      if (s.autoBuyUpgrades) {
-        const affordable = UPGRADES.filter(
-          (u) =>
-            !get().purchasedUpgrades.includes(u.id) &&
-            u.unlockCondition(get().lifetimeCrayons, get().generators) &&
-            get().crayons >= u.cost
-        ).sort((a, b) => a.cost - b.cost)
-        for (const u of affordable) {
-          if (get().crayons >= u.cost) get().buyUpgrade(u.id)
-        }
-      }
-
-      // Managers reinvest crayons into their generator.
-      if (s.autoBuyEnabled && s.hiredManagers.length > 0) {
-        const costMult =
-          computeEffects(get().purchasedUpgrades).generatorCostMultiplier *
-          computePrestigeEffects(get().prestigeUpgrades).costMult
-        for (const mgr of MANAGERS) {
-          if (!s.hiredManagers.includes(mgr.id)) continue
-          const def = GENERATORS.find((g) => g.id === mgr.generatorId)
-          if (!def) continue
-          const owned = get().generators[mgr.generatorId] ?? 0
-          const { count } = maxAffordableGenerators(def.baseCost, owned, get().crayons, costMult)
-          const buy = Math.min(count, 25) // cap per cycle to keep purchases gradual
-          if (buy > 0) get().buyGenerator(mgr.generatorId, buy)
-        }
+      if (!s.autoBuyUpgrades) return
+      const affordable = UPGRADES.filter(
+        (u) =>
+          !get().purchasedUpgrades.includes(u.id) &&
+          u.unlockCondition(get().lifetimeCrayons, get().generators) &&
+          get().crayons >= u.cost
+      ).sort((a, b) => a.cost - b.cost)
+      for (const u of affordable) {
+        if (get().crayons >= u.cost) get().buyUpgrade(u.id)
       }
     }, 250)
   }
-  startAutoBuy()
+  startAutoReq()
 
   return {
     ...init,
@@ -665,10 +645,6 @@ export const useGameStore = create<GameState>((set, get) => {
         const merged = { ...state, ...next, ...deriveWithBuffs({ ...state, ...next }) }
         return { ...merged, ...checkAchievements(merged) }
       })
-    },
-
-    toggleAutoBuy() {
-      set((s) => ({ autoBuyEnabled: !s.autoBuyEnabled }))
     },
 
     toggleAutoBuyUpgrades() {

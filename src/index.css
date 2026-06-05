@@ -820,16 +820,20 @@ body {
   color: var(--green-neon);
 }
 
+.manager-row.locked {
+  opacity: 0.45;
+}
+
+.manager-assignment {
+  font-size: 11px;
+  color: var(--green-neon);
+  font-weight: bold;
+}
+
 .manager-flavor {
   font-size: 10px;
   color: var(--tan);
   font-style: italic;
-}
-
-.manager-runs {
-  font-size: 10px;
-  color: var(--green-neon);
-  opacity: 0.8;
 }
 
 .manager-hired-badge {
@@ -837,6 +841,28 @@ body {
   font-weight: bold;
   color: var(--green-neon);
   flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+.manager-locked-badge {
+  font-size: 10px;
+  color: var(--tan);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+/* ---- Generator NCO badge ---- */
+.gen-nco-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--black);
+  background: var(--tan);
+  border-radius: 3px;
+  vertical-align: middle;
   letter-spacing: 1px;
 }
 
