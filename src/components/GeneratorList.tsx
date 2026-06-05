@@ -99,7 +99,7 @@ export function GeneratorList() {
                   onClick={cycleIdle ? (e) => { e.stopPropagation(); startGenerator(g.id) } : undefined}
                 >
                   <div className="gen-cycle-bar-fill" style={{ width: `${cyclePct}%` }} />
-                  {cycleIdle && <span className="gen-cycle-tap-cue">TAP ({formatCycleDuration(g.cycleDuration)})</span>}
+                  {cycleIdle && <span className="gen-cycle-tap-cue">TAP ({formatCycleDuration(g.cycleDuration / milestoneMult)})</span>}
                 </div>
               )}
               {next !== null && (

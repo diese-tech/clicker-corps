@@ -215,6 +215,7 @@ function computeCps(
     const owned = generators[g.id] ?? 0
     const upgradeMult = effects.generatorMultipliers[g.id] ?? 1
     const milestoneMult = milestoneMultiplier(owned)
+    // milestoneMult reflects the cycle-speed effect: ×N faster = ×N effective rate.
     return sum + owned * g.baseCps * upgradeMult * milestoneMult
   }, 0)
 
@@ -397,16 +398,17 @@ export const useGameStore = create<GameState>((set, get) => {
       const hasNCO = loaded.hiredManagers.includes(`mgr_${g.id}`)
       const genMult = offlineEffects.generatorMultipliers[g.id] ?? 1
       const milestoneMult = milestoneMultiplier(owned)
+      const effectiveDuration = g.cycleDuration / milestoneMult
       const cyclePayout =
-        owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * offlineGlobalFactor
+        owned * g.baseCps * g.cycleDuration * genMult * offlineGlobalFactor
 
       if (hasNCO) {
-        const completedCycles = Math.floor(cappedElapsed / g.cycleDuration)
+        const completedCycles = Math.floor(cappedElapsed / effectiveDuration)
         offlineGain += completedCycles * cyclePayout
       } else {
         const prev = offlineCycleProgress[g.id] ?? 0
         if (prev > 0) {
-          const remaining = (1 - prev) * g.cycleDuration
+          const remaining = (1 - prev) * effectiveDuration
           if (cappedElapsed >= remaining) {
             offlineGain += cyclePayout
             offlineCycleProgress[g.id] = 0
@@ -606,16 +608,20 @@ export const useGameStore = create<GameState>((set, get) => {
 
           const genMult = tickEffects.generatorMultipliers[g.id] ?? 1
           const milestoneMult = milestoneMultiplier(owned)
+          // Payout is base rate × duration — milestoneMult is NOT in the payout;
+          // it only speeds up the cycle so that payout arrives milestoneMult times
+          // more often, yielding the same ×N effective rate increase.
           const cyclePayout =
-            owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * globalFactor
+            owned * g.baseCps * g.cycleDuration * genMult * globalFactor
 
+          const advance = deltaSeconds * milestoneMult / g.cycleDuration
           if (hasNCO) {
-            const advanced = prev + deltaSeconds / g.cycleDuration
+            const advanced = prev + advance
             const cycles = Math.floor(advanced)
             autoCollected += cycles * cyclePayout
             newProgress[g.id] = advanced - cycles
           } else {
-            const next = prev + deltaSeconds / g.cycleDuration
+            const next = prev + advance
             if (next >= 1) {
               autoCollected += cyclePayout
               newProgress[g.id] = 0
