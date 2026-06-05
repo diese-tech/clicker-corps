@@ -39,8 +39,8 @@ export const MANAGERS: ManagerDef[] = GENERATORS.map((g) => {
     generatorId: g.id,
     name: f?.name ?? `${g.name} Manager`,
     flavor: f?.flavor ?? 'Keeps things running.',
-    // Roughly the price of ~18 of the generator — a meaningful sink once
-    // you're invested in that tier.
-    cost: Math.ceil(g.baseCost * 18),
+    // Roughly the price of ~50 of the generator at base cost — a significant
+    // one-time investment for a permanent ×2 multiplier on that tier.
+    cost: Math.ceil(g.baseCost * 50),
   }
 })

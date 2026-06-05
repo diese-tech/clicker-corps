@@ -49,6 +49,15 @@ export function formatNumber(n: number): string {
   return scaled.toFixed(2) + SUFFIXES[tier]
 }
 
+// Seconds until `crayons` reaches `cost` at current `cps`.
+// Returns null if already affordable, CPS is zero, or wait exceeds 10 minutes
+// (beyond that the number is too abstract to create urgency).
+export function timeToAfford(cost: number, crayons: number, cps: number): number | null {
+  if (crayons >= cost || cps <= 0) return null
+  const secs = (cost - crayons) / cps
+  return secs <= 600 ? secs : null
+}
+
 // Formats a duration in seconds as a compact "1d 2h 3m" string.
 export function formatDuration(totalSeconds: number): string {
   const s = Math.floor(totalSeconds)

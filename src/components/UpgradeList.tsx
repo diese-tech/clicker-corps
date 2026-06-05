@@ -1,7 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { UPGRADES, type UpgradeDef, type UpgradeEffectState } from '../data/upgrades'
 import { GENERATORS } from '../data/generators'
-import { formatNumber } from '../utils/math'
+import { formatNumber, timeToAfford, formatDuration } from '../utils/math'
 
 function describeEffect(u: UpgradeDef): string {
   const base: UpgradeEffectState = {
@@ -25,7 +25,7 @@ function describeEffect(u: UpgradeDef): string {
 }
 
 export function UpgradeList() {
-  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, buyUpgrade } = useGameStore()
+  const { crayons, cps, lifetimeCrayons, generators, purchasedUpgrades, buyUpgrade } = useGameStore()
 
   const available = UPGRADES.filter(
     (u) => !purchasedUpgrades.includes(u.id) && u.unlockCondition(lifetimeCrayons, generators)
@@ -38,6 +38,7 @@ export function UpgradeList() {
 
   function renderRow(u: UpgradeDef, canAfford: boolean) {
     const effect = describeEffect(u)
+    const wait = canAfford ? null : timeToAfford(u.cost, crayons, cps)
     return (
       <div key={u.id} className={`upgrade-row ${!canAfford ? 'cannot-afford' : ''}`}>
         <div className="upgrade-info">
@@ -46,7 +47,8 @@ export function UpgradeList() {
           <span className="upgrade-flavor">{u.flavor}</span>
         </div>
         <button className="buy-btn" onClick={() => buyUpgrade(u.id)} disabled={!canAfford}>
-          {formatNumber(u.cost)} 🖍
+          <span className="buy-cost">{formatNumber(u.cost)} 🖍</span>
+          {wait !== null && <span className="buy-timer">{formatDuration(wait)}</span>}
         </button>
       </div>
     )

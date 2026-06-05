@@ -5,6 +5,8 @@ import {
   bulkGeneratorCost,
   maxAffordableGenerators,
   formatNumber,
+  timeToAfford,
+  formatDuration,
 } from '../utils/math'
 import { totalCostMultiplier } from '../store/effectsHelper'
 import { milestoneMultiplier, nextMilestone, prevMilestone } from '../data/milestones'
@@ -13,7 +15,7 @@ type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
 
 export function GeneratorList() {
-  const { crayons, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, hiredManagers, buyGenerator } =
+  const { crayons, cps, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, hiredManagers, buyGenerator } =
     useGameStore()
   const [buyAmount, setBuyAmount] = useState<BuyAmount>(1)
   const costMult = totalCostMultiplier(purchasedUpgrades, prestigeUpgrades)
@@ -57,6 +59,7 @@ export function GeneratorList() {
         }
 
         const affordable = count > 0 && crayons >= cost
+        const wait = affordable ? null : timeToAfford(cost, crayons, cps)
         const milestoneMult = milestoneMultiplier(owned)
         const contribution = owned * g.baseCps * milestoneMult
         const next = nextMilestone(owned)
@@ -96,6 +99,9 @@ export function GeneratorList() {
               >
                 <span className="buy-count">{label}</span>
                 <span className="buy-cost">{formatNumber(cost)} 🖍</span>
+                {wait !== null && (
+                  <span className="buy-timer">{formatDuration(wait)}</span>
+                )}
               </button>
             </div>
           </div>
