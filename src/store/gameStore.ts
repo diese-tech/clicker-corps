@@ -215,9 +215,8 @@ function computeCps(
     const owned = generators[g.id] ?? 0
     const upgradeMult = effects.generatorMultipliers[g.id] ?? 1
     const milestoneMult = milestoneMultiplier(owned)
-    // milestoneMult applies twice: ×N payout per cycle AND ×N cycle speed,
-    // yielding ×N² effective rate per milestone level.
-    return sum + owned * g.baseCps * upgradeMult * milestoneMult * milestoneMult
+    // milestoneMult reflects the cycle-speed effect: ×N faster = ×N effective rate.
+    return sum + owned * g.baseCps * upgradeMult * milestoneMult
   }, 0)
 
   cps *= effects.globalCpsMultiplier
@@ -401,7 +400,7 @@ export const useGameStore = create<GameState>((set, get) => {
       const milestoneMult = milestoneMultiplier(owned)
       const effectiveDuration = g.cycleDuration / milestoneMult
       const cyclePayout =
-        owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * offlineGlobalFactor
+        owned * g.baseCps * g.cycleDuration * genMult * offlineGlobalFactor
 
       if (hasNCO) {
         const completedCycles = Math.floor(cappedElapsed / effectiveDuration)
@@ -609,10 +608,12 @@ export const useGameStore = create<GameState>((set, get) => {
 
           const genMult = tickEffects.generatorMultipliers[g.id] ?? 1
           const milestoneMult = milestoneMultiplier(owned)
+          // Payout is base rate × duration — milestoneMult is NOT in the payout;
+          // it only speeds up the cycle so that payout arrives milestoneMult times
+          // more often, yielding the same ×N effective rate increase.
           const cyclePayout =
-            owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * globalFactor
+            owned * g.baseCps * g.cycleDuration * genMult * globalFactor
 
-          // Milestones halve cycle duration per level: advance faster by milestoneMult.
           const advance = deltaSeconds * milestoneMult / g.cycleDuration
           if (hasNCO) {
             const advanced = prev + advance
