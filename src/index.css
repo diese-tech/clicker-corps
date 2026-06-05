@@ -510,6 +510,30 @@ body {
   color: var(--tan);
 }
 
+/* ---- Generator milestone progress bar ---- */
+.gen-milestone-bar-wrap {
+  position: relative;
+  height: 5px;
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.gen-milestone-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--green-neon);
+  transition: width 0.4s ease;
+}
+
+.gen-milestone-bar-label {
+  font-size: 9px;
+  color: var(--tan);
+  margin-top: 1px;
+}
+
 .gen-right {
   display: flex;
   flex-direction: column;
@@ -551,10 +575,26 @@ body {
   font-size: 13px;
 }
 
+.upgrade-effect {
+  font-size: 11px;
+  color: var(--green-neon);
+  font-weight: bold;
+}
+
 .upgrade-flavor {
   font-size: 10px;
   color: var(--tan);
   font-style: italic;
+}
+
+.upgrade-group-sep {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--tan);
+  text-align: center;
+  padding: 6px 0 4px;
+  border-top: 1px solid rgba(74,124,40,0.4);
+  margin-top: 4px;
 }
 
 .upgrade-more {
@@ -654,6 +694,77 @@ body {
   height: 100%;
   background: var(--green-neon);
   transition: width 0.3s;
+}
+
+/* ---- Milestones Panel ---- */
+.milestone-completed-count {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--green-neon);
+}
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.milestone-card {
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  text-align: center;
+}
+
+.milestone-card-future {
+  opacity: 0.55;
+}
+
+.milestone-card-target {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--green-neon);
+  text-shadow: 0 0 8px rgba(124,252,0,0.5);
+  line-height: 1;
+}
+
+.milestone-card-name {
+  font-size: 10px;
+  color: var(--cream);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.milestone-card-reward {
+  font-size: 11px;
+  color: var(--tan);
+}
+
+.milestone-card-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--green-light);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  margin: 2px 0;
+}
+
+.milestone-card-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--green-neon);
+  transition: width 0.4s ease;
+}
+
+.milestone-card-togo {
+  font-size: 9px;
+  color: var(--tan);
 }
 
 /* ---- Manager Panel (NCO Corps) ---- */

@@ -16,6 +16,7 @@ import { ThemeSwitcher } from './components/ThemeSwitcher'
 import { AchievementToast } from './components/AchievementToast'
 import { MarineEvent } from './components/MarineEvent'
 import { BuffBar } from './components/BuffBar'
+import { MilestonesPanel } from './components/MilestonesPanel'
 import { DebugPanel } from './components/DebugPanel'
 import { OfflineModal } from './components/OfflineModal'
 import { TimeTravelModal } from './components/TimeTravelModal'
@@ -105,7 +106,12 @@ export default function App() {
       <main className="tab-content">
         {intro && <p className="tab-intro">{intro}</p>}
 
-        {activeTab === 'supply' && <GeneratorList />}
+        {activeTab === 'supply' && (
+          <>
+            <GeneratorList />
+            <MilestonesPanel />
+          </>
+        )}
         {activeTab === 'upgrades' && <UpgradeList />}
         {activeTab === 'corps' && (
           <>

@@ -1,48 +1,78 @@
 import { useGameStore } from '../store/gameStore'
-import { UPGRADES } from '../data/upgrades'
+import { UPGRADES, type UpgradeDef, type UpgradeEffectState } from '../data/upgrades'
+import { GENERATORS } from '../data/generators'
 import { formatNumber } from '../utils/math'
 
-const MAX_SHOWN = 18
+function describeEffect(u: UpgradeDef): string {
+  const base: UpgradeEffectState = {
+    clickMultiplier: 1,
+    generatorMultipliers: {},
+    globalCpsMultiplier: 1,
+    generatorCostMultiplier: 1,
+  }
+  const after = u.applyEffect(base)
+  const parts: string[] = []
+  if (after.clickMultiplier > 1) parts.push(`×${after.clickMultiplier} click power`)
+  if (after.globalCpsMultiplier > 1) parts.push(`×${after.globalCpsMultiplier} all production`)
+  if (after.generatorCostMultiplier < 1) {
+    parts.push(`−${Math.round((1 - after.generatorCostMultiplier) * 100)}% generator costs`)
+  }
+  for (const [id, mult] of Object.entries(after.generatorMultipliers)) {
+    const gen = GENERATORS.find((g) => g.id === id)
+    parts.push(`×${mult} ${gen?.name ?? id} output`)
+  }
+  return parts.join(' • ')
+}
 
 export function UpgradeList() {
   const { crayons, lifetimeCrayons, generators, purchasedUpgrades, buyUpgrade } = useGameStore()
 
-  // Cheapest-first so the next worthwhile purchases surface; cap the list so a
-  // large unlocked backlog doesn't overwhelm the panel.
   const available = UPGRADES.filter(
     (u) => !purchasedUpgrades.includes(u.id) && u.unlockCondition(lifetimeCrayons, generators)
   ).sort((a, b) => a.cost - b.cost)
 
   if (available.length === 0) return null
 
-  const shown = available.slice(0, MAX_SHOWN)
-  const hidden = available.length - shown.length
+  const affordable = available.filter((u) => crayons >= u.cost)
+  const expensive = available.filter((u) => crayons < u.cost)
+
+  function renderRow(u: UpgradeDef, canAfford: boolean) {
+    const effect = describeEffect(u)
+    return (
+      <div key={u.id} className={`upgrade-row ${!canAfford ? 'cannot-afford' : ''}`}>
+        <div className="upgrade-info">
+          <span className="upgrade-name">{u.name}</span>
+          {effect && <span className="upgrade-effect">{effect}</span>}
+          <span className="upgrade-flavor">{u.flavor}</span>
+        </div>
+        <button className="buy-btn" onClick={() => buyUpgrade(u.id)} disabled={!canAfford}>
+          {formatNumber(u.cost)} 🖍
+        </button>
+      </div>
+    )
+  }
 
   return (
     <section className="panel">
       <h2 className="panel-title">
-        REQUISITIONS{' '}
-        <span className="ach-count">{available.length}</span>
+        REQUISITIONS <span className="ach-count">{available.length}</span>
       </h2>
-      {shown.map((u) => {
-        const affordable = crayons >= u.cost
-        return (
-          <div key={u.id} className={`upgrade-row ${!affordable ? 'cannot-afford' : ''}`}>
-            <div className="upgrade-info">
-              <span className="upgrade-name">{u.name}</span>
-              <span className="upgrade-flavor">{u.flavor}</span>
-            </div>
-            <button
-              className="buy-btn"
-              onClick={() => buyUpgrade(u.id)}
-              disabled={!affordable}
-            >
-              {formatNumber(u.cost)} 🖍
-            </button>
-          </div>
-        )
-      })}
-      {hidden > 0 && <p className="upgrade-more">+{hidden} more unlocked — buy these first</p>}
+
+      {affordable.length > 0 && (
+        <>
+          {expensive.length > 0 && (
+            <p className="upgrade-group-sep">— READY TO BUY —</p>
+          )}
+          {affordable.map((u) => renderRow(u, true))}
+        </>
+      )}
+
+      {expensive.length > 0 && (
+        <>
+          <p className="upgrade-group-sep">— UNLOCKED, NEED FUNDS —</p>
+          {expensive.map((u) => renderRow(u, false))}
+        </>
+      )}
     </section>
   )
 }
