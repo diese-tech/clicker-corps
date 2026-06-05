@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { GENERATORS } from '../data/generators'
-import { UPGRADES, UpgradeEffectState } from '../data/upgrades'
+import { UPGRADES } from '../data/upgrades'
 import { MENTORS } from '../data/mentors'
 import { MANAGERS } from '../data/managers'
 import { milestoneMultiplier } from '../data/milestones'
@@ -21,6 +21,12 @@ import {
 import { bulkGeneratorCost } from '../utils/math'
 import { dateKey, dailyAvailable, streakAfterClaim, dailyReward } from '../utils/daily'
 import { loadSave, writeSave, deleteSave, SaveState } from '../utils/save'
+import {
+  ProductionInput,
+  computeUpgradeEffects,
+  buildProductionContext,
+  calculateTotalProduction,
+} from './production'
 
 // Clock-tamper detection: if the device clock is ever seen running more than
 // this far BEHIND the highest timestamp we've recorded, the player almost
@@ -58,7 +64,7 @@ interface BuffMultipliers {
 
 const NO_BUFFS: BuffMultipliers = { cps: 1, click: 1 }
 
-function activeBuffMultipliers(buffs: Buff[], now: number): BuffMultipliers {
+export function activeBuffMultipliers(buffs: Buff[], now: number): BuffMultipliers {
   let cps = 1
   let click = 1
   for (const b of buffs) {
@@ -189,45 +195,32 @@ function checkAchievements(
   return evalAchievements(ctx, merged.unlockedAchievements, merged.pendingAchievements)
 }
 
-function computeEffects(purchased: string[]): UpgradeEffectState {
-  const base: UpgradeEffectState = {
-    clickMultiplier: 1,
-    generatorMultipliers: {},
-    globalCpsMultiplier: 1,
-    generatorCostMultiplier: 1,
+// Builds the ProductionInput slice from a (partial) game state plus an optional
+// active-frenzy CPS multiplier. Keeps every call site feeding the centralized
+// production helpers the exact same shape.
+function productionInput(
+  state: Pick<
+    GameState,
+    | 'generators'
+    | 'purchasedUpgrades'
+    | 'unlockedMentors'
+    | 'hiredManagers'
+    | 'commendations'
+    | 'prestigeUpgrades'
+    | 'unlockedAchievements'
+  >,
+  buffCpsMult = 1
+): ProductionInput {
+  return {
+    generators: state.generators,
+    purchasedUpgrades: state.purchasedUpgrades,
+    unlockedMentors: state.unlockedMentors,
+    hiredManagers: state.hiredManagers,
+    commendations: state.commendations,
+    prestigeUpgrades: state.prestigeUpgrades,
+    unlockedAchievements: state.unlockedAchievements,
+    buffCpsMult,
   }
-  return purchased.reduce((acc, id) => {
-    const def = UPGRADES.find((u) => u.id === id)
-    return def ? def.applyEffect(acc) : acc
-  }, base)
-}
-
-function computeCps(
-  generators: Record<string, number>,
-  effects: UpgradeEffectState,
-  unlockedMentors: string[],
-  hiredManagers: string[]
-): number {
-  // Only NCO-managed generators contribute passive CPS (they auto-cycle).
-  // Un-managed generators require player taps and produce nothing passively.
-  let cps = GENERATORS.reduce((sum, g) => {
-    if (!hiredManagers.includes(`mgr_${g.id}`)) return sum
-    const owned = generators[g.id] ?? 0
-    const upgradeMult = effects.generatorMultipliers[g.id] ?? 1
-    const milestoneMult = milestoneMultiplier(owned)
-    // milestoneMult reflects the cycle-speed effect: ×N faster = ×N effective rate.
-    return sum + owned * g.baseCps * upgradeMult * milestoneMult
-  }, 0)
-
-  cps *= effects.globalCpsMultiplier
-
-  const mentorBonus = unlockedMentors.reduce((sum, mid) => {
-    const m = MENTORS.find((x) => x.id === mid)
-    return sum + (m?.cpsBonus ?? 0)
-  }, 0)
-  cps *= 1 + mentorBonus
-
-  return cps
 }
 
 function buildDerived(
@@ -244,7 +237,9 @@ function buildDerived(
   >,
   buffs: BuffMultipliers = NO_BUFFS
 ) {
-  const effects = computeEffects(state.purchasedUpgrades)
+  // The HUD total and the generator rows now share ONE production system: the
+  // CPS here is exactly Σ calculateGeneratorProduction over all generators.
+  const ctx = buildProductionContext(productionInput(state, buffs.cps))
   const pe = computePrestigeEffects(state.prestigeUpgrades)
   // Passive Commendation bonus (rate set by prestige upgrades) times any
   // permanent prestige production multipliers.
@@ -252,13 +247,10 @@ function buildDerived(
   // Morale: each earned achievement nudges all production up.
   const morale = moraleMultiplier(state.unlockedAchievements.length)
   return {
-    cps:
-      computeCps(state.generators, effects, state.unlockedMentors, state.hiredManagers) *
-      prestige *
-      pe.cpsMult *
-      morale *
-      buffs.cps,
-    crayonsPerClick: effects.clickMultiplier * prestige * pe.clickMult * morale * buffs.click,
+    cps: calculateTotalProduction(ctx),
+    // Click power keeps its own (non-generator) modifier chain.
+    crayonsPerClick:
+      ctx.effects.clickMultiplier * prestige * pe.clickMult * morale * buffs.click,
     rank: getRank(state.lifetimeCrayons),
   }
 }
@@ -375,20 +367,9 @@ export const useGameStore = create<GameState>((set, get) => {
 
     // Per-generator cycle simulation: NCO generators accumulate completed
     // cycles; non-NCO generators credit one payout if an in-progress cycle
-    // would have finished while the player was away.
-    const offlineEffects = computeEffects(loaded.purchasedUpgrades)
-    const offlinePrestige = 1 + loaded.commendations * offlinePe.bonusPerCommendation
-    const offlineMorale = moraleMultiplier(loaded.unlockedAchievements.length)
-    const offlineMentorBonus = loaded.unlockedMentors.reduce((sum, mid) => {
-      const m = MENTORS.find((x) => x.id === mid)
-      return sum + (m?.cpsBonus ?? 0)
-    }, 0)
-    const offlineGlobalFactor =
-      offlineEffects.globalCpsMultiplier *
-      offlinePrestige *
-      offlinePe.cpsMult *
-      offlineMorale *
-      (1 + offlineMentorBonus)
+    // would have finished while the player was away. Offline has no active
+    // frenzies, so the buff multiplier stays at its default of 1.
+    const offlineCtx = buildProductionContext(productionInput(loaded))
 
     let offlineGain = 0
     const offlineCycleProgress = { ...loaded.generatorCycleProgress }
@@ -396,11 +377,11 @@ export const useGameStore = create<GameState>((set, get) => {
       const owned = loaded.generators[g.id] ?? 0
       if (owned === 0) continue
       const hasNCO = loaded.hiredManagers.includes(`mgr_${g.id}`)
-      const genMult = offlineEffects.generatorMultipliers[g.id] ?? 1
+      const genMult = offlineCtx.effects.generatorMultipliers[g.id] ?? 1
       const milestoneMult = milestoneMultiplier(owned)
       const effectiveDuration = g.cycleDuration / milestoneMult
       const cyclePayout =
-        owned * g.baseCps * g.cycleDuration * genMult * offlineGlobalFactor
+        owned * g.baseCps * g.cycleDuration * genMult * offlineCtx.globalFactor
 
       if (hasNCO) {
         const completedCycles = Math.floor(cappedElapsed / effectiveDuration)
@@ -541,7 +522,7 @@ export const useGameStore = create<GameState>((set, get) => {
       const def = GENERATORS.find((g) => g.id === id)
       if (!def || amount < 1) return
       const costMult =
-        computeEffects(s.purchasedUpgrades).generatorCostMultiplier *
+        computeUpgradeEffects(s.purchasedUpgrades).generatorCostMultiplier *
         computePrestigeEffects(s.prestigeUpgrades).costMult
       const owned = s.generators[id] ?? 0
       const cost = bulkGeneratorCost(def.baseCost, owned, amount, costMult)
@@ -577,22 +558,9 @@ export const useGameStore = create<GameState>((set, get) => {
         const anyCycleActive = Object.values(s.generatorCycleProgress).some((p) => p > 0)
         if (s.cps === 0 && !anyCycleActive && buffs === s.activeBuffs && buffs.length === 0) return {}
 
-        // Compute per-cycle payout multipliers once per tick.
-        const tickEffects = computeEffects(s.purchasedUpgrades)
-        const tickPe = computePrestigeEffects(s.prestigeUpgrades)
-        const tickPrestige = 1 + s.commendations * tickPe.bonusPerCommendation
-        const tickMorale = moraleMultiplier(s.unlockedAchievements.length)
-        const tickMentorBonus = s.unlockedMentors.reduce((sum, mid) => {
-          const m = MENTORS.find((x) => x.id === mid)
-          return sum + (m?.cpsBonus ?? 0)
-        }, 0)
-        const globalFactor =
-          tickEffects.globalCpsMultiplier *
-          tickPrestige *
-          tickPe.cpsMult *
-          tickMorale *
-          (1 + tickMentorBonus) *
-          buffMults.cps
+        // Compute per-cycle payout multipliers once per tick, from the same
+        // production system the HUD and rows use (frenzies folded in).
+        const tickCtx = buildProductionContext(productionInput(s, buffMults.cps))
 
         const newProgress = { ...s.generatorCycleProgress }
         let autoCollected = 0
@@ -606,13 +574,13 @@ export const useGameStore = create<GameState>((set, get) => {
 
           if (!hasNCO && prev === 0) continue  // idle, no NCO
 
-          const genMult = tickEffects.generatorMultipliers[g.id] ?? 1
+          const genMult = tickCtx.effects.generatorMultipliers[g.id] ?? 1
           const milestoneMult = milestoneMultiplier(owned)
           // Payout is base rate × duration — milestoneMult is NOT in the payout;
           // it only speeds up the cycle so that payout arrives milestoneMult times
           // more often, yielding the same ×N effective rate increase.
           const cyclePayout =
-            owned * g.baseCps * g.cycleDuration * genMult * globalFactor
+            owned * g.baseCps * g.cycleDuration * genMult * tickCtx.globalFactor
 
           const advance = deltaSeconds * milestoneMult / g.cycleDuration
           if (hasNCO) {
