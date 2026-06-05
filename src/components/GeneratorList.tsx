@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGameStore } from '../store/gameStore'
+import { useGameStore, activeBuffMultipliers } from '../store/gameStore'
 import { GENERATORS } from '../data/generators'
 import {
   bulkGeneratorCost,
@@ -9,6 +9,11 @@ import {
   formatDuration,
 } from '../utils/math'
 import { totalCostMultiplier } from '../store/effectsHelper'
+import {
+  buildProductionContext,
+  calculateGeneratorProduction,
+  generatorEffectiveRate,
+} from '../store/production'
 import { milestoneMultiplier, nextMilestone, prevMilestone } from '../data/milestones'
 
 function formatCycleDuration(seconds: number): string {
@@ -21,10 +26,38 @@ type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
 
 export function GeneratorList() {
-  const { crayons, cps, lifetimeCrayons, generators, purchasedUpgrades, prestigeUpgrades, hiredManagers, generatorCycleProgress, buyGenerator, startGenerator } =
-    useGameStore()
+  const {
+    crayons,
+    cps,
+    lifetimeCrayons,
+    generators,
+    purchasedUpgrades,
+    unlockedMentors,
+    unlockedAchievements,
+    prestigeUpgrades,
+    commendations,
+    hiredManagers,
+    generatorCycleProgress,
+    activeBuffs,
+    buyGenerator,
+    startGenerator,
+  } = useGameStore()
   const [buyAmount, setBuyAmount] = useState<BuyAmount>(1)
   const costMult = totalCostMultiplier(purchasedUpgrades, prestigeUpgrades)
+
+  // Derive every row's production from the SAME production system as the HUD
+  // total, with the player's active CPS frenzies folded in. Summing each row's
+  // passive contribution therefore reproduces the HUD "PER SEC" exactly.
+  const prodCtx = buildProductionContext({
+    generators,
+    purchasedUpgrades,
+    unlockedMentors,
+    hiredManagers,
+    commendations,
+    prestigeUpgrades,
+    unlockedAchievements,
+    buffCpsMult: activeBuffMultipliers(activeBuffs, Date.now()).cps,
+  })
 
   // Progressive reveal: show a generator once it's owned or the player has
   // earned within reach of its base cost. Keeps the early game uncluttered.
@@ -67,7 +100,12 @@ export function GeneratorList() {
         const affordable = count > 0 && crayons >= cost
         const wait = affordable ? null : timeToAfford(cost, crayons, cps)
         const milestoneMult = milestoneMultiplier(owned)
-        const contribution = owned * g.baseCps * milestoneMult
+        // production: the crayons/sec this generator is ACTUALLY contributing to
+        // the passive HUD total right now (0 unless an NCO is auto-cycling it).
+        // effectiveRate: what it produces per second WHILE its cycle runs — the
+        // figure a tap-driven generator achieves, shown as its automation potential.
+        const production = calculateGeneratorProduction(g.id, prodCtx)
+        const effectiveRate = generatorEffectiveRate(g.id, prodCtx)
         const next = nextMilestone(owned)
         const prev = prevMilestone(owned)
         const barPct = next ? Math.min(100, ((owned - prev) / (next - prev)) * 100) : 100
@@ -92,7 +130,17 @@ export function GeneratorList() {
                 {hasNCO && <span className="gen-auto-badge">AUTO</span>}
               </span>
               <span className="gen-flavor">{g.flavor}</span>
-              <span className="gen-cps">{formatNumber(contribution)} crayons/sec</span>
+              {hasNCO ? (
+                // Auto-cycled by an NCO — this is live passive output and is
+                // exactly what this row adds to the HUD per-second total.
+                <span className="gen-cps">{formatNumber(production)} crayons/sec</span>
+              ) : owned > 0 ? (
+                // Tap-driven: contributes 0 passively, so the per-second figure
+                // shown is its potential output once automated with an NCO.
+                <span className="gen-cps gen-cps-idle">
+                  ≈{formatNumber(effectiveRate)}/sec when run · hire an NCO to automate
+                </span>
+              ) : null}
               {owned > 0 && (
                 <div
                   className={`gen-cycle-bar-wrap ${cycleIdle ? 'idle' : ''} ${cyclePct >= 100 ? 'complete' : ''}`}

@@ -501,6 +501,13 @@ body {
   color: var(--green-neon);
 }
 
+/* Tap-driven generator (no NCO): shows potential-when-automated output, dimmed
+   so it reads as a hint rather than live passive production. */
+.gen-cps-idle {
+  color: var(--green-dim, #6f8f6f);
+  opacity: 0.85;
+}
+
 .gen-milestone-badge {
   display: inline-block;
   margin-left: 6px;
