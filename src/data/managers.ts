@@ -1,9 +1,10 @@
 import { GENERATORS } from './generators'
 
 // An NCO you hire (with crayons) to take permanent charge of a generator.
-// Once hired, the NCO doubles that generator's output — they run the unit
-// efficiently so you don't have to babysit it. NCOs never auto-buy generators
-// or upgrades; they just make what you already own produce twice as much.
+// Once hired, the NCO auto-starts that generator's cycle every time it
+// completes — you never have to tap it again. Without an NCO the cycle sits
+// idle after each payout until the player manually restarts it.
+// NCOs never auto-buy generators or upgrades.
 export interface ManagerDef {
   id: string
   generatorId: string
@@ -39,8 +40,8 @@ export const MANAGERS: ManagerDef[] = GENERATORS.map((g) => {
     generatorId: g.id,
     name: f?.name ?? `${g.name} Manager`,
     flavor: f?.flavor ?? 'Keeps things running.',
-    // Roughly the price of ~50 of the generator at base cost — a significant
-    // one-time investment for a permanent ×2 multiplier on that tier.
-    cost: Math.ceil(g.baseCost * 50),
+    // Roughly the price of ~25 of the generator at base cost — automation
+    // alone (no output amplification) is a meaningful but fair investment.
+    cost: Math.ceil(g.baseCost * 25),
   }
 })

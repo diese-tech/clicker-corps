@@ -20,6 +20,7 @@ export interface SaveState {
   dailyStreak: number
   clockHighWater: number
   lastSavedAt: number
+  generatorCycleProgress: Record<string, number>
 }
 
 export function loadSave(): SaveState | null {

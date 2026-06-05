@@ -3,6 +3,7 @@ export interface GeneratorDef {
   name: string
   baseCost: number
   baseCps: number
+  cycleDuration: number
   flavor: string
 }
 
@@ -15,6 +16,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Crayon Box',
     baseCost: 15,
     baseCps: 0.1,
+    cycleDuration: 3,
     flavor: 'A basic box of government-grade wax nutrition.',
   },
   {
@@ -22,6 +24,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'PX Run',
     baseCost: 100,
     baseCps: 1,
+    cycleDuration: 6,
     flavor: 'Someone made a suspiciously efficient trip to the PX.',
   },
   {
@@ -29,6 +32,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Supply Sergeant',
     baseCost: 1100,
     baseCps: 8,
+    cycleDuration: 15,
     flavor: 'Nobody knows where the crayons came from. Do not ask.',
   },
   {
@@ -36,6 +40,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Motor Pool Cache',
     baseCost: 12000,
     baseCps: 47,
+    cycleDuration: 30,
     flavor: 'Found behind a broken Humvee. Still edible.',
   },
   {
@@ -43,6 +48,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Fire Team Forage',
     baseCost: 130000,
     baseCps: 260,
+    cycleDuration: 60,
     flavor: 'Four Marines, one mission: locate snacks. Overwhelming success.',
   },
   {
@@ -50,6 +56,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Squad Supply Drop',
     baseCost: 1400000,
     baseCps: 1400,
+    cycleDuration: 120,
     flavor: 'Airdropped pallet. 90% crayons, 10% MREs nobody will eat.',
   },
   {
@@ -57,6 +64,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Platoon Pallet',
     baseCost: 20000000,
     baseCps: 7800,
+    cycleDuration: 180,
     flavor: 'Shrink-wrapped, forklift-certified, dangerously delicious.',
   },
   {
@@ -64,6 +72,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Company Convoy',
     baseCost: 330000000,
     baseCps: 44000,
+    cycleDuration: 300,
     flavor: 'A mile-long convoy hauling nothing but wax. Logistics weeps.',
   },
   {
@@ -71,6 +80,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Battalion Depot',
     baseCost: 5100000000,
     baseCps: 260000,
+    cycleDuration: 600,
     flavor: 'An entire warehouse the supply chief swears does not exist.',
   },
   {
@@ -78,6 +88,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Expeditionary Force',
     baseCost: 75000000000,
     baseCps: 1600000,
+    cycleDuration: 900,
     flavor: 'Deployed worldwide to secure the strategic crayon reserve.',
   },
   {
@@ -85,6 +96,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Joint Task Force',
     baseCost: 1050000000000,
     baseCps: 10000000,
+    cycleDuration: 1200,
     flavor: 'Every branch, one mission: nobody admits whose crayons these are.',
   },
   {
@@ -92,6 +104,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Theater Command',
     baseCost: 15000000000000,
     baseCps: 65000000,
+    cycleDuration: 1800,
     flavor: 'Coordinates crayon operations across an entire hemisphere.',
   },
   {
@@ -99,6 +112,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Crayon Armada',
     baseCost: 220000000000000,
     baseCps: 420000000,
+    cycleDuration: 3600,
     flavor: 'A fleet whose sole cargo manifest reads "wax, assorted."',
   },
   {
@@ -106,6 +120,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Strategic Crayon Reserve',
     baseCost: 3200000000000000,
     baseCps: 2700000000,
+    cycleDuration: 7200,
     flavor: 'A national stockpile released only in the event of severe boredom.',
   },
   {
@@ -113,6 +128,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Orbital Crayon Command',
     baseCost: 46000000000000000,
     baseCps: 18000000000,
+    cycleDuration: 14400,
     flavor: 'Raining color from low orbit. Allegedly within the rules of engagement.',
   },
   {
@@ -120,6 +136,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: 'Galactic Crayon Reserve',
     baseCost: 680000000000000000,
     baseCps: 120000000000,
+    cycleDuration: 28800,
     flavor: 'The 64-pack, but it is a Dyson sphere.',
   },
 ]
