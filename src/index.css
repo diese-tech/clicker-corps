@@ -453,6 +453,14 @@ body {
   display: block;
 }
 
+.buy-timer {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--tan);
+  margin-top: 1px;
+}
+
 /* ---- Generator Rows ---- */
 .generator-row {
   display: flex;
