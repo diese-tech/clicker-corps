@@ -11,8 +11,7 @@ import {
 import { totalCostMultiplier } from '../store/effectsHelper'
 import {
   buildProductionContext,
-  calculateGeneratorProduction,
-  generatorEffectiveRate,
+  generatorCyclePayout,
 } from '../store/production'
 import { milestoneMultiplier, nextMilestone, prevMilestone } from '../data/milestones'
 
@@ -100,12 +99,10 @@ export function GeneratorList() {
         const affordable = count > 0 && crayons >= cost
         const wait = affordable ? null : timeToAfford(cost, crayons, cps)
         const milestoneMult = milestoneMultiplier(owned)
-        // production: the crayons/sec this generator is ACTUALLY contributing to
-        // the passive HUD total right now (0 unless an NCO is auto-cycling it).
-        // effectiveRate: what it produces per second WHILE its cycle runs — the
-        // figure a tap-driven generator achieves, shown as its automation potential.
-        const production = calculateGeneratorProduction(g.id, prodCtx)
-        const effectiveRate = generatorEffectiveRate(g.id, prodCtx)
+        // Payout delivered when the cycle bar completes — shown overlaid on the bar.
+        // effectiveCycleSeconds is the actual fill time (milestone halves it, etc.).
+        const cyclePayout = owned > 0 ? generatorCyclePayout(g.id, prodCtx) : 0
+        const effectiveCycleSeconds = g.cycleDuration / milestoneMult
         const next = nextMilestone(owned)
         const prev = prevMilestone(owned)
         const barPct = next ? Math.min(100, ((owned - prev) / (next - prev)) * 100) : 100
@@ -130,24 +127,20 @@ export function GeneratorList() {
                 {hasNCO && <span className="gen-auto-badge">AUTO</span>}
               </span>
               <span className="gen-flavor">{g.flavor}</span>
-              {hasNCO ? (
-                // Auto-cycled by an NCO — this is live passive output and is
-                // exactly what this row adds to the HUD per-second total.
-                <span className="gen-cps">{formatNumber(production)} crayons/sec</span>
-              ) : owned > 0 ? (
-                // Tap-driven: contributes 0 passively, so the per-second figure
-                // shown is its potential output once automated with an NCO.
-                <span className="gen-cps gen-cps-idle">
-                  ≈{formatNumber(effectiveRate)}/sec when run · hire an NCO to automate
-                </span>
-              ) : null}
               {owned > 0 && (
                 <div
                   className={`gen-cycle-bar-wrap ${cycleIdle ? 'idle' : ''} ${cyclePct >= 100 ? 'complete' : ''}`}
                   onClick={cycleIdle ? (e) => { e.stopPropagation(); startGenerator(g.id) } : undefined}
                 >
                   <div className="gen-cycle-bar-fill" style={{ width: `${cyclePct}%` }} />
-                  {cycleIdle && <span className="gen-cycle-tap-cue">TAP ({formatCycleDuration(g.cycleDuration / milestoneMult)})</span>}
+                  {cycleIdle ? (
+                    <span className="gen-cycle-tap-cue">TAP ({formatCycleDuration(effectiveCycleSeconds)})</span>
+                  ) : (
+                    <span className="gen-cycle-payout-overlay">
+                      +{formatNumber(cyclePayout)}
+                      <span className="gen-cycle-payout-timer">{formatCycleDuration(effectiveCycleSeconds)}</span>
+                    </span>
+                  )}
                 </div>
               )}
               {next !== null && (

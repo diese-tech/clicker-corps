@@ -12,6 +12,8 @@ import {
   buildProductionContext,
   calculateGeneratorProduction,
   calculateTotalProduction,
+  generatorEffectiveRate,
+  generatorCyclePayout,
 } from '../src/store/production'
 
 let failures = 0
@@ -98,6 +100,22 @@ assert('morale (achievement) increases total', newTotal({ ...base, unlockedAchie
 assert('mentor bonus increases total', newTotal({ ...base, unlockedMentors: [...base.unlockedMentors, MENTORS[2].id] }) > t0)
 // Frenzy: a ×2 buff exactly doubles output.
 assert('×2 frenzy exactly doubles total', close(newTotal({ ...base, buffCpsMult: base.buffCpsMult! * 2 }), t0 * 2))
+
+console.log('\nCycle bar overlay: payout × (cycleDuration/milestoneMult) === effectiveRate × cycleDuration:')
+for (const gId of ['crayon_box', 'motor_pool_cache', 'fire_team_forage']) {
+  const g = GENERATORS.find((x) => x.id === gId)!
+  const owned = base.generators[gId] ?? 0
+  if (owned === 0) { console.log(`  skipped ${gId} (0 owned)`); continue }
+  const mm = milestoneMultiplier(owned)
+  const payout = generatorCyclePayout(gId, ctx)
+  const rate = generatorEffectiveRate(gId, ctx)
+  const effectiveCycleSeconds = g.cycleDuration / mm
+  // payout / effectiveCycleSeconds must equal rate (what the /sec HUD shows)
+  assert(`${gId}: payout / effectiveCycleSec === effectiveRate`, close(payout / effectiveCycleSeconds, rate),
+    `payout=${payout} effectiveCycleSec=${effectiveCycleSeconds} rate=${rate}`)
+  // payout must equal rate × cycleDuration / milestoneMult × milestoneMult = rate × cycleDuration
+  assert(`${gId}: bar label always = (rate × effectiveCycleSeconds)`, close(payout, rate * effectiveCycleSeconds))
+}
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exit(failures === 0 ? 0 : 1)

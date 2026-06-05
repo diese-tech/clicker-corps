@@ -501,12 +501,6 @@ body {
   color: var(--green-neon);
 }
 
-/* Tap-driven generator (no NCO): shows potential-when-automated output, dimmed
-   so it reads as a hint rather than live passive production. */
-.gen-cps-idle {
-  color: var(--green-dim, #6f8f6f);
-  opacity: 0.85;
-}
 
 .gen-milestone-badge {
   display: inline-block;
@@ -884,7 +878,7 @@ body {
 /* ---- Generator cycle progress bar ---- */
 .gen-cycle-bar-wrap {
   position: relative;
-  height: 8px;
+  height: 20px;
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--tan);
   border-radius: 2px;
@@ -915,11 +909,33 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: bold;
   color: rgba(200,180,140,0.7);
   letter-spacing: 1px;
   pointer-events: none;
+}
+
+/* Payout amount + cycle timer overlaid on the running cycle bar */
+.gen-cycle-payout-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.gen-cycle-payout-timer {
+  font-size: 9px;
+  font-weight: normal;
+  opacity: 0.72;
 }
 
 /* ---- Commendation Exchange ---- */

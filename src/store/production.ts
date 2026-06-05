@@ -134,3 +134,17 @@ export function calculateGeneratorProduction(id: string, ctx: ProductionContext)
 export function calculateTotalProduction(ctx: ProductionContext): number {
   return GENERATORS.reduce((sum, g) => sum + calculateGeneratorProduction(g.id, ctx), 0)
 }
+
+// The lump-sum payout delivered when one cycle completes — the number shown
+// on the cycle bar overlay. milestoneMult is intentionally absent: milestone
+// speeds the cycle (shorter effective duration) without changing the payout
+// amount. This formula matches cyclePayout in tick() exactly, so the bar
+// label always equals what the player actually receives.
+export function generatorCyclePayout(id: string, ctx: ProductionContext): number {
+  const g = GENERATORS.find((x) => x.id === id)
+  if (!g) return 0
+  const owned = ctx.generators[id] ?? 0
+  if (owned === 0) return 0
+  const upgradeMult = ctx.effects.generatorMultipliers[id] ?? 1
+  return owned * g.baseCps * g.cycleDuration * upgradeMult * ctx.globalFactor
+}
