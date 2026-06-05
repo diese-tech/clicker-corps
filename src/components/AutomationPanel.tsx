@@ -2,16 +2,11 @@ import { useGameStore } from '../store/gameStore'
 
 export function AutomationPanel() {
   const {
-    hiredManagers,
-    commendations,
     autoBuyUpgrades,
     autoCollectEvents,
     toggleAutoBuyUpgrades,
     toggleAutoCollectEvents,
   } = useGameStore()
-
-  // Reveal once the player has started automating (hired an NCO) or prestiged.
-  if (hiredManagers.length === 0 && commendations === 0) return null
 
   return (
     <section className="panel">

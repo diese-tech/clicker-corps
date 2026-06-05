@@ -28,10 +28,10 @@ type TabId = 'supply' | 'upgrades' | 'corps' | 'prestige' | 'records' | 'setting
 const TABS: { id: TabId; icon: string; label: string; intro: string }[] = [
   { id: 'supply', icon: '🏭', label: 'Supply', intro: 'Buy crayon generators — hit quantity milestones for ×2 output.' },
   { id: 'upgrades', icon: '📦', label: 'Upgrades', intro: 'One-time requisitions that multiply your production.' },
-  { id: 'corps', icon: '🪖', label: 'Corps', intro: 'Hire NCOs to auto-buy generators, and tune automation.' },
+  { id: 'corps', icon: '🪖', label: 'Corps', intro: 'Hire NCOs to permanently double individual generator output.' },
   { id: 'prestige', icon: '⭐', label: 'Prestige', intro: 'Reenlist for Commendations, then spend them on permanent power.' },
   { id: 'records', icon: '📋', label: 'Records', intro: 'Your ribbon rack and full service record.' },
-  { id: 'settings', icon: '⚙️', label: 'Settings', intro: 'Change your uniform (theme) or reset your save.' },
+  { id: 'settings', icon: '⚙️', label: 'Settings', intro: 'Tune automation, change your uniform, or reset your save.' },
 ]
 
 export default function App() {
@@ -113,12 +113,7 @@ export default function App() {
           </>
         )}
         {activeTab === 'upgrades' && <UpgradeList />}
-        {activeTab === 'corps' && (
-          <>
-            <ManagerPanel />
-            <AutomationPanel />
-          </>
-        )}
+        {activeTab === 'corps' && <ManagerPanel />}
         {activeTab === 'prestige' && (
           <>
             <ReenlistPanel />
@@ -134,6 +129,7 @@ export default function App() {
         )}
         {activeTab === 'settings' && (
           <>
+            <AutomationPanel />
             <ThemeSwitcher />
             <DebugPanel />
           </>

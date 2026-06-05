@@ -874,6 +874,41 @@ body {
   white-space: nowrap;
 }
 
+.exchange-preview {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exchange-preview-note {
+  font-size: 11px;
+  color: var(--tan);
+  font-style: italic;
+}
+
+.exchange-preview-bar-wrap {
+  position: relative;
+  height: 6px;
+  background: var(--green-dark);
+  border: 1px solid var(--green-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.exchange-preview-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--green-neon);
+  transition: width 0.4s ease;
+}
+
+.exchange-preview-pct {
+  font-size: 9px;
+  color: var(--tan);
+  text-align: right;
+}
+
 .exchange-note {
   font-size: 10px;
   color: var(--tan);
