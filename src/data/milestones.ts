@@ -21,3 +21,13 @@ export function nextMilestone(owned: number): number | null {
   }
   return null
 }
+
+// The last threshold already crossed, or 0 if none yet.
+export function prevMilestone(owned: number): number {
+  let prev = 0
+  for (const t of MILESTONE_THRESHOLDS) {
+    if (owned >= t) prev = t
+    else break
+  }
+  return prev
+}

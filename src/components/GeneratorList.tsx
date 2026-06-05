@@ -7,7 +7,7 @@ import {
   formatNumber,
 } from '../utils/math'
 import { totalCostMultiplier } from '../store/effectsHelper'
-import { milestoneMultiplier, nextMilestone } from '../data/milestones'
+import { milestoneMultiplier, nextMilestone, prevMilestone } from '../data/milestones'
 
 type BuyAmount = 1 | 10 | 100 | 'max'
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max']
@@ -60,6 +60,8 @@ export function GeneratorList() {
         const milestoneMult = milestoneMultiplier(owned)
         const contribution = owned * g.baseCps * milestoneMult
         const next = nextMilestone(owned)
+        const prev = prevMilestone(owned)
+        const barPct = next ? Math.min(100, ((owned - prev) / (next - prev)) * 100) : 100
         const label = buyAmount === 'max' ? `MAX${count > 0 ? ` (${count})` : ''}` : `x${count}`
 
         return (
@@ -71,10 +73,15 @@ export function GeneratorList() {
               </span>
               <span className="gen-flavor">{g.flavor}</span>
               <span className="gen-cps">{formatNumber(contribution)} crayons/sec</span>
-              {next !== null && owned > 0 && (
-                <span className="gen-milestone-hint">
-                  ×2 at {next} ({next - owned} to go)
-                </span>
+              {next !== null && (
+                <>
+                  <div className="gen-milestone-bar-wrap">
+                    <div className="gen-milestone-bar-fill" style={{ width: `${barPct}%` }} />
+                  </div>
+                  <span className="gen-milestone-bar-label">
+                    {next - owned} more → ×{milestoneMult * 2} at {next}
+                  </span>
+                </>
               )}
             </div>
             <div className="gen-right">
