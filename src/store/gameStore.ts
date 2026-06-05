@@ -99,6 +99,7 @@ interface GameState {
   activeEvent: ActiveEvent | null
   lastSavedAt: number
   offlineMessage: string | null
+  generatorCycleProgress: Record<string, number>
 
   // Derived
   cps: number
@@ -110,6 +111,7 @@ interface GameState {
   buyGenerator: (id: string, amount?: number) => void
   buyUpgrade: (id: string) => void
   tick: (deltaSeconds: number) => void
+  startGenerator: (id: string) => void
   reenlist: () => void
   buyPrestigeUpgrade: (id: string) => void
   claimDaily: () => void
@@ -206,13 +208,14 @@ function computeCps(
   unlockedMentors: string[],
   hiredManagers: string[]
 ): number {
+  // Only NCO-managed generators contribute passive CPS (they auto-cycle).
+  // Un-managed generators require player taps and produce nothing passively.
   let cps = GENERATORS.reduce((sum, g) => {
+    if (!hiredManagers.includes(`mgr_${g.id}`)) return sum
     const owned = generators[g.id] ?? 0
     const upgradeMult = effects.generatorMultipliers[g.id] ?? 1
     const milestoneMult = milestoneMultiplier(owned)
-    // Each hired NCO doubles their generator's output permanently.
-    const ncoMult = hiredManagers.includes(`mgr_${g.id}`) ? 2 : 1
-    return sum + owned * g.baseCps * upgradeMult * milestoneMult * ncoMult
+    return sum + owned * g.baseCps * upgradeMult * milestoneMult
   }, 0)
 
   cps *= effects.globalCpsMultiplier
@@ -294,6 +297,7 @@ function fromSave(saved: SaveState) {
     dailyStreak: saved.dailyStreak ?? 0,
     clockHighWater: Math.max(saved.clockHighWater ?? 0, saved.lastSavedAt ?? 0),
     lastSavedAt: saved.lastSavedAt,
+    generatorCycleProgress: saved.generatorCycleProgress ?? {},
   }
   const derived = buildDerived(base)
   // Silently reconcile achievements already earned (covers saves written
@@ -342,6 +346,7 @@ function initialState() {
     crayonsPerClick: 1,
     rank: 'Recruit',
     offlineMessage: null as string | null,
+    generatorCycleProgress: {} as Record<string, number>,
   }
 }
 
@@ -363,9 +368,52 @@ export const useGameStore = create<GameState>((set, get) => {
     const clockHighWater = Math.max(loaded.clockHighWater, now)
     const timeTamperMessage = tampered ? TIME_TAMPER_MESSAGE : null
 
-    const offlineCap = computePrestigeEffects(loaded.prestigeUpgrades).offlineCapSeconds
-    const elapsed = Math.min((now - saved.lastSavedAt) / 1000, offlineCap)
-    const offlineGain = loaded.cps * elapsed
+    const offlinePe = computePrestigeEffects(loaded.prestigeUpgrades)
+    const offlineCap = offlinePe.offlineCapSeconds
+    const cappedElapsed = Math.min((now - saved.lastSavedAt) / 1000, offlineCap)
+
+    // Per-generator cycle simulation: NCO generators accumulate completed
+    // cycles; non-NCO generators credit one payout if an in-progress cycle
+    // would have finished while the player was away.
+    const offlineEffects = computeEffects(loaded.purchasedUpgrades)
+    const offlinePrestige = 1 + loaded.commendations * offlinePe.bonusPerCommendation
+    const offlineMorale = moraleMultiplier(loaded.unlockedAchievements.length)
+    const offlineMentorBonus = loaded.unlockedMentors.reduce((sum, mid) => {
+      const m = MENTORS.find((x) => x.id === mid)
+      return sum + (m?.cpsBonus ?? 0)
+    }, 0)
+    const offlineGlobalFactor =
+      offlineEffects.globalCpsMultiplier *
+      offlinePrestige *
+      offlinePe.cpsMult *
+      offlineMorale *
+      (1 + offlineMentorBonus)
+
+    let offlineGain = 0
+    const offlineCycleProgress = { ...loaded.generatorCycleProgress }
+    for (const g of GENERATORS) {
+      const owned = loaded.generators[g.id] ?? 0
+      if (owned === 0) continue
+      const hasNCO = loaded.hiredManagers.includes(`mgr_${g.id}`)
+      const genMult = offlineEffects.generatorMultipliers[g.id] ?? 1
+      const milestoneMult = milestoneMultiplier(owned)
+      const cyclePayout =
+        owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * offlineGlobalFactor
+
+      if (hasNCO) {
+        const completedCycles = Math.floor(cappedElapsed / g.cycleDuration)
+        offlineGain += completedCycles * cyclePayout
+      } else {
+        const prev = offlineCycleProgress[g.id] ?? 0
+        if (prev > 0) {
+          const remaining = (1 - prev) * g.cycleDuration
+          if (cappedElapsed >= remaining) {
+            offlineGain += cyclePayout
+            offlineCycleProgress[g.id] = 0
+          }
+        }
+      }
+    }
 
     if (offlineGain > 0.5) {
       const gained = Math.floor(offlineGain)
@@ -389,6 +437,7 @@ export const useGameStore = create<GameState>((set, get) => {
         pendingAchievements: [],
         clockHighWater,
         timeTamperMessage,
+        generatorCycleProgress: offlineCycleProgress,
         ...derived,
       }
     } else {
@@ -398,6 +447,7 @@ export const useGameStore = create<GameState>((set, get) => {
         offlineMessage: null,
         clockHighWater,
         timeTamperMessage,
+        generatorCycleProgress: offlineCycleProgress,
       }
     }
   }
@@ -428,6 +478,7 @@ export const useGameStore = create<GameState>((set, get) => {
         dailyStreak: s.dailyStreak,
         clockHighWater: Math.max(s.clockHighWater, Date.now()),
         lastSavedAt: Date.now(),
+        generatorCycleProgress: s.generatorCycleProgress,
       })
     }, 5000)
   }
@@ -520,10 +571,61 @@ export const useGameStore = create<GameState>((set, get) => {
       set((s) => {
         const now = Date.now()
         const buffs = pruneBuffs(s.activeBuffs, now)
-        // Nothing to do when idle with no buffs to age out.
-        if (s.cps === 0 && buffs === s.activeBuffs && buffs.length === 0) return {}
+        const buffMults = activeBuffMultipliers(buffs, now)
+        const anyCycleActive = Object.values(s.generatorCycleProgress).some((p) => p > 0)
+        if (s.cps === 0 && !anyCycleActive && buffs === s.activeBuffs && buffs.length === 0) return {}
 
-        const gained = s.cps * deltaSeconds
+        // Compute per-cycle payout multipliers once per tick.
+        const tickEffects = computeEffects(s.purchasedUpgrades)
+        const tickPe = computePrestigeEffects(s.prestigeUpgrades)
+        const tickPrestige = 1 + s.commendations * tickPe.bonusPerCommendation
+        const tickMorale = moraleMultiplier(s.unlockedAchievements.length)
+        const tickMentorBonus = s.unlockedMentors.reduce((sum, mid) => {
+          const m = MENTORS.find((x) => x.id === mid)
+          return sum + (m?.cpsBonus ?? 0)
+        }, 0)
+        const globalFactor =
+          tickEffects.globalCpsMultiplier *
+          tickPrestige *
+          tickPe.cpsMult *
+          tickMorale *
+          (1 + tickMentorBonus) *
+          buffMults.cps
+
+        const newProgress = { ...s.generatorCycleProgress }
+        let autoCollected = 0
+
+        for (const g of GENERATORS) {
+          const owned = s.generators[g.id] ?? 0
+          if (owned === 0) continue
+
+          const hasNCO = s.hiredManagers.includes(`mgr_${g.id}`)
+          const prev = newProgress[g.id] ?? 0
+
+          if (!hasNCO && prev === 0) continue  // idle, no NCO
+
+          const genMult = tickEffects.generatorMultipliers[g.id] ?? 1
+          const milestoneMult = milestoneMultiplier(owned)
+          const cyclePayout =
+            owned * g.baseCps * g.cycleDuration * genMult * milestoneMult * globalFactor
+
+          if (hasNCO) {
+            const advanced = prev + deltaSeconds / g.cycleDuration
+            const cycles = Math.floor(advanced)
+            autoCollected += cycles * cyclePayout
+            newProgress[g.id] = advanced - cycles
+          } else {
+            const next = prev + deltaSeconds / g.cycleDuration
+            if (next >= 1) {
+              autoCollected += cyclePayout
+              newProgress[g.id] = 0
+            } else {
+              newProgress[g.id] = next
+            }
+          }
+        }
+
+        const gained = autoCollected
         const newLifetime = s.lifetimeCrayons + gained
 
         // Check mentor unlocks
@@ -541,13 +643,25 @@ export const useGameStore = create<GameState>((set, get) => {
           activeBuffs: buffs,
           playtimeSeconds: s.playtimeSeconds + deltaSeconds,
           clockHighWater: Math.max(s.clockHighWater, now),
+          generatorCycleProgress: newProgress,
         }
         const merged = {
           ...s,
           ...next,
-          ...buildDerived({ ...s, ...next }, activeBuffMultipliers(buffs, now)),
+          ...buildDerived({ ...s, ...next }, buffMults),
         }
         return { ...merged, ...checkAchievements(merged) }
+      })
+    },
+
+    startGenerator(id: string) {
+      set((s) => {
+        const progress = s.generatorCycleProgress[id] ?? 0
+        if (progress > 0) return {}  // already running
+        if (s.hiredManagers.includes(`mgr_${id}`)) return {}  // NCO handles it
+        const owned = s.generators[id] ?? 0
+        if (owned === 0) return {}
+        return { generatorCycleProgress: { ...s.generatorCycleProgress, [id]: 1e-10 } }
       })
     },
 
@@ -571,6 +685,7 @@ export const useGameStore = create<GameState>((set, get) => {
           hiredManagers: [] as string[],
           commendations: state.commendations + gain,
           commendationsEarned: state.commendationsEarned + gain,
+          generatorCycleProgress: {} as Record<string, number>,
         }
         const merged = { ...state, ...base, ...deriveWithBuffs({ ...state, ...base }) }
         return { ...merged, ...checkAchievements(merged) }

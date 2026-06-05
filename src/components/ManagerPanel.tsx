@@ -37,7 +37,7 @@ export function ManagerPanel() {
           >
             <div className="manager-info">
               <span className="manager-name">{m.name}</span>
-              <span className="manager-assignment">×2 {gen?.name ?? m.generatorId} output</span>
+              <span className="manager-assignment">Auto-runs {gen?.name ?? m.generatorId}</span>
               <span className="manager-flavor">{m.flavor}</span>
             </div>
             {hired ? (

@@ -860,18 +860,59 @@ body {
   opacity: 0.6;
 }
 
-/* ---- Generator NCO badge ---- */
-.gen-nco-badge {
+/* ---- Generator AUTO badge (NCO managing this generator) ---- */
+.gen-auto-badge {
   display: inline-block;
   margin-left: 5px;
   padding: 0 5px;
   font-size: 9px;
   font-weight: bold;
   color: var(--black);
-  background: var(--tan);
+  background: var(--green-neon);
   border-radius: 3px;
   vertical-align: middle;
   letter-spacing: 1px;
+}
+
+/* ---- Generator cycle progress bar ---- */
+.gen-cycle-bar-wrap {
+  position: relative;
+  height: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--tan);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+  cursor: default;
+}
+
+.gen-cycle-bar-wrap.idle {
+  border-color: rgba(200,180,140,0.4);
+  cursor: pointer;
+}
+
+.gen-cycle-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #c8960a, #f5c842);
+  transition: width 0.1s linear;
+}
+
+.gen-cycle-bar-wrap.idle .gen-cycle-bar-fill {
+  width: 0 !important;
+}
+
+.gen-cycle-tap-cue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  color: rgba(200,180,140,0.7);
+  letter-spacing: 1px;
+  pointer-events: none;
 }
 
 /* ---- Commendation Exchange ---- */
