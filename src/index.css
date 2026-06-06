@@ -1,47 +1,77 @@
 /* ---- Reset & Base ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Color system. The --green-* names are historical: they're now theme-agnostic
+   semantic slots (dark/mid/light = backgrounds, neon = primary accent) whose
+   VALUES change per theme. The default is "Service Khaki" (warm khaki + gold);
+   no theme uses the old toxic neon green. --accent-rgb is the accent as an RGB
+   triplet so glow rgba()s can be themed. */
 :root {
-  --green-dark:  #1a2e1a;
-  --green-mid:   #2d4a1e;
-  --green-light: #4a7c28;
-  --green-neon:  #7cfc00;
-  --cream:       #e8dfc0;
+  --green-dark:  #241f15;
+  --green-mid:   #3a3120;
+  --green-light: #6b5a34;
+  --green-neon:  #cda349;
+  --accent-rgb:  205, 163, 73;
+  --cream:       #f0e6cc;
   --tan:         #c9b882;
-  --brown:       #6b4c1e;
+  --brown:       #5a4424;
   --black:       #0d0d0d;
   --red:         #c0392b;
+  /* Crayon-color pops — used sparingly for personality (badges, buff chips). */
+  --crayon-red:    #e54b4b;
+  --crayon-blue:   #3f7cc4;
+  --crayon-green:  #5fae5f;
+  --crayon-purple: #9b6bd6;
   --font-mono:   'Courier New', Courier, monospace;
+  --font-body:   system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* ---- Cosmetic Themes (reskin via CSS variable overrides) ---- */
+/* ---- Cosmetic Themes (reskin via CSS variable overrides) ----
+   One cohesive, warm, metallic-accent family — no neon, medium glow. */
+
+/* Service Khaki — the default; explicit block kept in sync with :root. */
 :root[data-theme='desert'] {
-  --green-dark:  #2b2416;
-  --green-mid:   #4a3f28;
-  --green-light: #8a7440;
-  --green-neon:  #e8c860;
+  --green-dark:  #241f15;
+  --green-mid:   #3a3120;
+  --green-light: #6b5a34;
+  --green-neon:  #cda349;
+  --accent-rgb:  205, 163, 73;
   --cream:       #f0e6cc;
   --tan:         #c9b882;
   --brown:       #5a4424;
 }
 
+/* Woodland — refined olive green (de-neon'd), for green fans. */
+:root[data-theme='woodland'] {
+  --green-dark:  #16241a;
+  --green-mid:   #243a22;
+  --green-light: #3d5a32;
+  --green-neon:  #9fb84f;
+  --accent-rgb:  159, 184, 79;
+  --cream:       #e8dfc0;
+  --tan:         #b8c19a;
+  --brown:       #4a3a1e;
+}
+
 :root[data-theme='dress_blues'] {
-  --green-dark:  #0a1226;
-  --green-mid:   #14264d;
-  --green-light: #2a4a8a;
+  --green-dark:  #0e1730;
+  --green-mid:   #1a2c52;
+  --green-light: #2f4f8f;
   --green-neon:  #d4af37;
+  --accent-rgb:  212, 175, 55;
   --cream:       #f5f0e6;
   --tan:         #aebbdd;
   --brown:       #3a2a1e;
 }
 
 :root[data-theme='night_ops'] {
-  --green-dark:  #0a0a0a;
-  --green-mid:   #181818;
-  --green-light: #3a3a3a;
-  --green-neon:  #ffae00;
-  --cream:       #dcdcdc;
-  --tan:         #8a8a8a;
+  --green-dark:  #111110;
+  --green-mid:   #1f1d18;
+  --green-light: #3a382e;
+  --green-neon:  #e0922f;
+  --accent-rgb:  224, 146, 47;
+  --cream:       #dcdcd2;
+  --tan:         #9a948a;
   --brown:       #2a2418;
 }
 
@@ -52,9 +82,26 @@ html, body, #root {
 body {
   background: var(--green-dark);
   color: var(--cream);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 14px;
   min-height: 100vh;
+}
+
+/* Numbers/stats stay monospace for clean tabular alignment, even though the
+   body/headings are now a cleaner sans. */
+.currency-value,
+.gen-owned,
+.buy-cost,
+.buy-timer,
+.gen-cps,
+.gen-cycle-payout-overlay,
+.gen-cycle-tap-cue,
+.gen-milestone-bar-label,
+.exchange-balance,
+.commendation-bonus,
+.feed-rate,
+.feed-float {
+  font-family: var(--font-mono);
 }
 
 /* ---- App Layout: single screen, only the tab content scrolls ---- */
@@ -143,13 +190,13 @@ body {
 
 .daily-bonus.available {
   border-color: var(--green-neon);
-  box-shadow: 0 0 16px rgba(124, 252, 0, 0.4);
+  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.28);
   animation: daily-pulse 1.4s ease-in-out infinite;
 }
 
 @keyframes daily-pulse {
-  0%, 100% { box-shadow: 0 0 12px rgba(124, 252, 0, 0.3); }
-  50% { box-shadow: 0 0 22px rgba(124, 252, 0, 0.6); }
+  0%, 100% { box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.21); }
+  50% { box-shadow: 0 0 22px rgba(var(--accent-rgb), 0.42); }
 }
 
 .daily-bonus.claimed {
@@ -313,7 +360,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 18px rgba(124, 252, 0, 0.45);
+  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.32);
   transition: transform 0.06s, box-shadow 0.1s;
   touch-action: none;
   user-select: none;
@@ -348,6 +395,28 @@ body {
   padding: 1px 8px;
   border-radius: 8px;
   pointer-events: none;
+}
+
+/* Floating "+N" that pops off the feed button on each press. Multiple can be
+   alive at once (rapid tapping); each self-removes after the animation. */
+.feed-float {
+  position: absolute;
+  bottom: 116px;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--green-neon);
+  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6), 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: feed-float-up 0.9s ease-out forwards;
+}
+
+@keyframes feed-float-up {
+  0%   { opacity: 0; transform: translate(-50%, 6px) scale(0.9); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -64px) scale(1.05); }
 }
 
 .feed-btn {
@@ -509,7 +578,7 @@ body {
   font-size: 10px;
   font-weight: bold;
   color: var(--black);
-  background: var(--green-neon);
+  background: var(--crayon-green); /* crayon-color pop, distinct from the gold accent */
   border-radius: 3px;
   vertical-align: middle;
 }
@@ -737,7 +806,7 @@ body {
   font-size: 24px;
   font-weight: bold;
   color: var(--green-neon);
-  text-shadow: 0 0 8px rgba(124,252,0,0.5);
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.35);
   line-height: 1;
 }
 
@@ -1169,7 +1238,7 @@ body {
 
 .ach-row.unlocked {
   border-color: var(--green-neon);
-  box-shadow: inset 0 0 8px rgba(124, 252, 0, 0.15);
+  box-shadow: inset 0 0 8px rgba(var(--accent-rgb), 0.11);
 }
 
 .ach-row.locked {
@@ -1219,7 +1288,7 @@ body {
   padding: 12px 16px;
   background: var(--green-mid);
   border: 2px solid var(--green-neon);
-  box-shadow: 0 0 24px rgba(124, 252, 0, 0.5);
+  box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.35);
   cursor: pointer;
   animation: ach-slide-in 0.35s ease-out;
 }
@@ -1322,15 +1391,15 @@ body {
   align-items: center;
   gap: 8px;
   background: var(--green-mid);
-  border: 1px solid var(--green-neon);
+  border: 1px solid var(--crayon-purple); /* crayon "power-up" pop for active frenzies */
   padding: 4px 10px;
-  box-shadow: 0 0 10px rgba(124, 252, 0, 0.4);
+  box-shadow: 0 0 10px rgba(155, 107, 214, 0.3);
 }
 
 .buff-chip-label {
   font-size: 10px;
   font-weight: bold;
-  color: var(--green-neon);
+  color: var(--crayon-purple);
   letter-spacing: 1px;
 }
 

@@ -10,7 +10,7 @@ export function OfflineModal() {
         <div className="modal-title">INCOMING TRANSMISSION</div>
         <div className="modal-body">{offlineMessage}</div>
         <button className="feed-btn" onClick={dismissOfflineMessage}>
-          HOOAH
+          OORAH
         </button>
       </div>
     </div>

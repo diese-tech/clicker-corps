@@ -8,11 +8,13 @@ export interface ThemeDef {
   bg: string
 }
 
+// Note: the `desert` id is the default ("Service Khaki"). Ids are kept stable so
+// existing saved `selectedTheme` values still resolve after the visual overhaul.
 export const THEMES: ThemeDef[] = [
-  { id: 'woodland', name: 'Woodland', accent: '#7cfc00', bg: '#1a2e1a' },
-  { id: 'desert', name: 'Desert', accent: '#e8c860', bg: '#2b2416' },
-  { id: 'dress_blues', name: 'Dress Blues', accent: '#d4af37', bg: '#0a1226' },
-  { id: 'night_ops', name: 'Night Ops', accent: '#ffae00', bg: '#0a0a0a' },
+  { id: 'desert', name: 'Service Khaki', accent: '#cda349', bg: '#241f15' },
+  { id: 'woodland', name: 'Woodland', accent: '#9fb84f', bg: '#16241a' },
+  { id: 'dress_blues', name: 'Dress Blues', accent: '#d4af37', bg: '#0e1730' },
+  { id: 'night_ops', name: 'Night Ops', accent: '#e0922f', bg: '#111110' },
 ]
 
-export const DEFAULT_THEME = 'woodland'
+export const DEFAULT_THEME = 'desert'
