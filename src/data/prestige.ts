@@ -9,8 +9,8 @@
 // +2% to all crayon production per Commendation held (raisable via the Exchange).
 export const PRESTIGE_BONUS_PER_COMMENDATION = 0.02
 
-// Lifetime crayons required for the FIRST Commendation.
-export const FIRST_COMMENDATION_AT = 1e17
+// Lifetime crayons required for the FIRST Commendation (100 trillion).
+export const FIRST_COMMENDATION_AT = 1e14
 
 // Each further Commendation requires this many TIMES more lifetime crayons than
 // the previous one — so prestige gets exponentially harder the deeper you go.
